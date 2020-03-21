@@ -1,0 +1,7 @@
+/jay-env/
+.vscode/
+*.pyc
+*.pyo
+.DS_Store
+.idea/*
+#.gitignore#
