@@ -1,7 +1,8 @@
 from fastapi import Cookie, Depends, FastAPI, Header
 from starlette.responses import HTMLResponse
 from starlette.websockets import WebSocket, WebSocketDisconnect
-from network.NetworkManager import NetworkManager
+
+from app.network.NetworkManager import NetworkManager
 
 app = FastAPI()
 

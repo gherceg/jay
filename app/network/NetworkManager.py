@@ -1,10 +1,11 @@
-from network.NetworkDelegate import NetworkDelegate
-from starlette.websockets import WebSocket, WebSocketDisconnect
-import json
-from game.GameFactory import GameFactory
-from game.Game import Game
 import logging
-from Constants import *
+import json
+from starlette.websockets import WebSocket, WebSocketDisconnect
+
+from app.network.NetworkDelegate import NetworkDelegate
+from app.game.GameFactory import GameFactory
+from app.game.Game import Game
+from app.Constants import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

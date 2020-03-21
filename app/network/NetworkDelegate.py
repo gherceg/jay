@@ -1,5 +1,6 @@
 import abc
 
+
 class NetworkDelegate(abc.ABC):
 
     @abc.abstractmethod
