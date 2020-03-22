@@ -50,11 +50,11 @@ class StateMethods:
             state.loc[turn.card, turn.respondent] = CardStatus.DOES_NOT_HAVE
 
         # update any unknown statuses to might have for the player asking the question
-        state = update_rows_from_to_value_for_column(state,
-                                                     card_set.value,
-                                                     turn.questioner,
-                                                     CardStatus.UNKNOWN,
-                                                     CardStatus.MIGHT_HAVE)
+        state = update_rows_with_old_to_new_for_column(state,
+                                                       card_set.value,
+                                                       turn.questioner,
+                                                       CardStatus.UNKNOWN,
+                                                       CardStatus.MIGHT_HAVE)
         return state
 
     @staticmethod

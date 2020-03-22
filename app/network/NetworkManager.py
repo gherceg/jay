@@ -1,4 +1,5 @@
 import logging
+from logging import exception
 import json
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
@@ -35,13 +36,14 @@ class NetworkManager(NetworkDelegate):
     def handle_message(self, websocket: WebSocket, message: str) -> str:
         message = self.parse(message)
         logger.debug(message)
-        if DATA in message:
-            data = message[DATA]
-        else:
+
+        if DATA not in message:
             raise exception('Unknown Message Format: NetworkManager.py: No DATA field found in message.')
 
         if MESSAGE_TYPE not in message:
             raise exception('Unknown Message Format: NetworkManager.py: No MESSAGE_TYPE field found in message.')
+
+        data = message[DATA]
 
         if message[MESSAGE_TYPE] == GAME_SETUP_KEY:
             if self.game:
@@ -140,7 +142,8 @@ class NetworkManager(NetworkDelegate):
             living_connections.append(websocket)
         self.connections = living_connections
 
-    def parse(self, message):
+    @staticmethod
+    def parse(message):
         if isinstance(message, str):
             return json.loads(message)
         elif isinstance(message, dict):
