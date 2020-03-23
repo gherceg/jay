@@ -1,21 +1,30 @@
+# Message Keys
 MESSAGE_TYPE = "type"
-GAME_SETUP_KEY = "setup"
-CONNECT_KEY = "connect"
-SET_CARDS_KEY = "update_cards"
-QUESTION_KEY = "question"
-NEW_TURN_KEY = "new_turn"
-PLAYER_KEY = "player"
-HANDSHAKE_KEY = "handshake"
-
-# Turn related keys
 DATA = "data"
+IDENTIFIER = "identifier"
+PIN = "pin"
+NAME = "name"
 QUESTIONER = "questioner"
 RESPONDENT = "respondent"
 CARD = "card"
 CARDS = "cards"
-ID = "id"
+PLAYER_KEY = "player"
+PLAYERS_KEY = "players"
+TEAMS_KEY = "teams"
 
-# More keys to determine groups
-PIN = "pin"
-NAME = "name"
-ID = "id"
+# Client Message Types
+HANDSHAKE = "handshake"
+
+CREATE_GAME = "create_game"
+CONNECT_TO_GAME = "connect_to_game"
+SET_CARDS = "update_cards"
+
+QUESTION = "question"
+NEW_TURN_KEY = "new_turn"
+
+# Server Message Types
+CREATED_GAME = "created_game"
+CONNECTED_TO_GAME = "connected_to_game"
+ERROR = "error"
+DESCRIPTION = "description"
+

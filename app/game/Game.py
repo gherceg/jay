@@ -7,18 +7,13 @@ from app.network.NetworkDelegate import NetworkDelegate
 class Game(QuestionDelegate, TurnDelegate):
     """Responsible for managing a game and its players"""
 
-    # TODO: these items need to be included in the constructor if we don't want them to persist
-    pin: int = 1234
-    players: dict = {}
-    teams: dict = {}
-    ledger: list = []
-
     def __init__(self, network_delegate: NetworkDelegate, players: tuple, teams: tuple):
         self.network_delegate = network_delegate
         self.pin = 1234
         self.ledger = []
 
         # create a dictionary of players for easy lookup
+        self.player_ids = {}
         self.players = {}
         for player in players:
             self.players[player.name] = player
