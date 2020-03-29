@@ -1,6 +1,8 @@
 import random
 
 from app.game.data.CardSet import CardSet
+from app.Constants import *
+from app.util.Optional import *
 
 
 def set_for_card(card) -> CardSet:
@@ -31,3 +33,24 @@ def distribute_cards(player_count: int) -> tuple:
 
     assert len(hands) == player_count
     return tuple(hands)
+
+
+def card_set_for_key(key: str) -> Optional:
+    if key == LOW_CLUBS_KEY:
+        return Optional(CardSet.LOW_CLUBS)
+    elif key == HIGH_CLUBS_KEY:
+        return Optional(CardSet.HIGH_CLUBS)
+    elif key == LOW_DIAMONDS_KEY:
+        return Optional(CardSet.LOW_DIAMONDS)
+    elif key == HIGH_DIAMONDS_KEY:
+        return Optional(CardSet.HIGH_DIAMONDS)
+    elif key == LOW_SPADES_KEY:
+        return Optional(CardSet.LOW_SPADES)
+    elif key == HIGH_SPADES_KEY:
+        return Optional(CardSet.HIGH_SPADES)
+    elif key == LOW_HEARTS_KEY:
+        return Optional(CardSet.LOW_HEARTS)
+    elif key == HIGH_HEARTS_KEY:
+        return Optional(CardSet.HIGH_HEARTS)
+    else:
+        return Optional.empty()

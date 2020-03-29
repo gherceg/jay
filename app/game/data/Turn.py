@@ -26,7 +26,8 @@ class Turn:
             )
 
     def to_dict(self) -> dict:
-        return {'questioner': self.questioner,
+        return {'type': 'turn',
+                'questioner': self.questioner,
                 'respondent': self.respondent,
                 'card': self.card,
                 'outcome': self.outcome}

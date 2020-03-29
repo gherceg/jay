@@ -10,3 +10,5 @@ class CardSet(Enum):
     HIGH_CLUBS = ('9c', '10c', 'jc', 'qc', 'kc', 'ac')
     HIGH_DIAMONDS = ('9d', '10d', 'jd', 'qd', 'kd', 'ad')
     HIGH_HEARTS = ('9h', '10h', 'jh', 'qh', 'kh', 'ah')
+
+

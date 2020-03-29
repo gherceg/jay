@@ -18,21 +18,30 @@ python -m venv jay-env
 
 You can activate the python environment by running the following command:
 Mac OS / Linux
+
 `source jay-env/bin/activate`
 
 Windows
+
 `jay-env\Scripts\activate`
 
 You should see the name of your virtual environment in parenthesis on your terminal line e.g. (jay-env).
 
 ### Deactivate the virtual environment
 
-To decativate the virtual environment and use your original Python environment, simply type ‘deactivate’.
+To deactivate the virtual environment and use your original Python environment, simply type ‘deactivate’.
+
 `deactivate`
 
+### Install Dependencies
+Once your virtual environment is setup and activated, install dependencies using pip:
+
+`pip install -r requirements.txt`
 
 ### Run Server
-To run: `uvicorn main:app --reload`
+From the root directory:
+
+`uvicorn main:app --reload`
 
 ### Testing
 

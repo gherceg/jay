@@ -7,6 +7,7 @@ from app.network.NetworkDelegate import NetworkDelegate
 from app.game.GameFactory import GameFactory
 from app.game.Game import Game
 from app.Constants import *
+from app.util.UtilMethods import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,12 +60,19 @@ class Server(NetworkDelegate):
                 logger.error('Server.py: QUESTION missing client id. Closing connection.')
                 await websocket.close()
 
+        elif message[MESSAGE_TYPE] == DECLARATION:
+            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys:
+                self.handle_declaration(data)
+            else:
+                logger.error('Server.py: DECLARATION missing client id. Closing connection.')
+                await websocket.close()
+
         elif message[MESSAGE_TYPE] == HANDSHAKE:
             logger.info('Connecting New Client')
 
     def handle_create_game_request(self, websocket: WebSocket, data: dict) -> str:
         if self.game:
-            logger.info('Deleting Existing Game...')
+            logger.info('Deleting Existing Game')
             self.game = None
 
         logger.info('Creating New Game')
@@ -121,6 +129,15 @@ class Server(NetworkDelegate):
         else:
             raise exception(
                 'Unknown Message Format: Server.py: QUESTION: Message does not have QUESTIONER, RESPONDENT, or CARD')
+
+    def handle_declaration(self, data: dict):
+        logger.info('Received declaration')
+        card_set = card_set_for_key(data[CARD_SET])
+        if PLAYER_KEY in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
+            self.game.handle_declaration(data[PLAYER_KEY], data[CARD_SET], data[DECLARED_MAP])
+        else:
+            raise exception(
+                'Unknown Message Format: Server.py: DECLARATION: Message does not have PLAYER_KEY, CARD_SET, or DECLARED_MAP')
 
     def register_new_client(self, identifier: str, websocket: WebSocket) -> str:
         logger.info('Registering new client with id: %s' % identifier)

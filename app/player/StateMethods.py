@@ -1,5 +1,7 @@
 from app.game.data.CardStatus import CardStatus
 from app.game.data.Turn import Turn
+from app.game.data.Declaration import Declaration
+from app.game.data.CardSet import CardSet
 from app.util.UtilMethods import set_for_card, deck_of_cards
 from app.util.DataFrameMethods import *
 
@@ -38,7 +40,7 @@ class StateMethods:
 
     @staticmethod
     def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
-        card_set = set_for_card(turn.card)
+        card_set: CardSet = set_for_card(turn.card)
 
         if turn.outcome:
             # we know which player has the card so the rest do not
@@ -55,6 +57,13 @@ class StateMethods:
                                                        turn.questioner,
                                                        CardStatus.UNKNOWN,
                                                        CardStatus.MIGHT_HAVE)
+        return state
+
+    @staticmethod
+    def update_state_with_declaration(state: DataFrame, declaration: Declaration) -> DataFrame:
+        for card in declaration.declared_map.keys():
+            state.loc[card, :] = CardStatus.DECLARED
+
         return state
 
     @staticmethod

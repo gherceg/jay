@@ -12,6 +12,9 @@ class PlayerInterface:
     def received_next_turn(self, turn: Turn):
         self.state = StateMethods.update_state_with_turn(self.state, turn)
 
+    def received_declaration(self, declaration: Declaration):
+        self.state = StateMethods.update_state_with_declaration(self.state, declaration)
+
     def set_initial_cards(self, cards: tuple):
         self.state = StateMethods.update_state_upon_receiving_cards(self.state, self.name, cards)
 

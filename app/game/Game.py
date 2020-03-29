@@ -1,7 +1,10 @@
 from app.game.data.Turn import Turn
+from app.game.data.Declaration import Declaration
+from app.game.data.CardSet import CardSet
 from app.player.QuestionDelegate import QuestionDelegate
 from app.player.TurnDelegate import TurnDelegate
 from app.network.NetworkDelegate import NetworkDelegate
+from app.Constants import *
 
 
 class Game(QuestionDelegate, TurnDelegate):
@@ -29,15 +32,37 @@ class Game(QuestionDelegate, TurnDelegate):
         for key, player in self.players.items():
             player.received_next_turn(turn)
 
+    def handle_declaration(self, player: str, card_set: CardSet, declared_map: dict):
+        # convert string card set to enum
+
+        outcome = True
+        for (card, player) in declared_map.items():
+            outcome = self.does_player_have_card(player, card) and outcome
+
+        declaration = Declaration(player, card_set, declared_map, outcome)
+        self.ledger.append(declaration)
+        for key, player in self.players.items():
+            player.received_declaration(declaration)
+
     def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
         """Package update to send to client"""
         contents = {}
-        contents['message_type'] = 'game_update'
-        contents['game_id'] = 0
-        contents['last_turn'] = turn.to_dict()
-        contents['cards'] = cards
+        contents[MESSAGE_TYPE] = GAME_UPDATE
+        contents[LAST_TURN] = turn.to_dict()
+        contents[CARDS] = cards
         # contents['current_turn'] = self.game.up_next
-        contents['teams'] = self.build_teams_package()
+        contents[TEAMS_KEY] = self.build_teams_package()
+
+        self.network_delegate.broadcast_message(player, contents)
+
+    def broadcast_declaration(self, player: str, declaration: Declaration, cards: tuple):
+        """Package update to send to client"""
+        contents = {}
+        contents[MESSAGE_TYPE] = GAME_UPDATE
+        contents[LAST_TURN] = declaration.to_dict()
+        contents[CARDS] = cards
+        # contents['current_turn'] = self.game.up_next
+        contents[TEAMS_KEY] = self.build_teams_package()
 
         self.network_delegate.broadcast_message(player, contents)
 

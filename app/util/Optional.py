@@ -20,9 +20,8 @@ class Optional(Generic[T]):
 
         return self.value
 
-    def isEmpty(self) -> bool:
+    def is_empty(self) -> bool:
         return self.value is None
 
-    def isPresent(self) -> bool:
+    def is_present(self) -> bool:
         return self.value is not None
-

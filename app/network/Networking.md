@@ -1,9 +1,20 @@
 #Networking
 
+##Defined Keys
+Card Sets are defined as follows:
+- low_spades
+- high_spades
+- low_diamonds
+- high_diamonds
+- low_clubs
+- high_clubs
+- low_hearts
+- high_hearts
+
 ##Client Messages
 
 ###Create Game
-    { 'type': 'create_game' 
+    { 'type': 'create_game',
       'data': {
         'players': [
             'name': player name 
@@ -16,7 +27,7 @@
     }
     
 ###Connect To Game
-    { 'type': 'connect_to_game'
+    { 'type': 'connect_to_game',
      'data': {
         'pin': pin for game,
         'name': player name 
@@ -24,7 +35,7 @@
     }
     
 ###Set Cards
-    { 'type': 'set_cards'
+    { 'type': 'set_cards',
       'data': {
         'identifier': identifier provided by server,
         'cards': list of cards
@@ -32,7 +43,7 @@
      }
 
 ###Question
-    { 'type': 'question'
+    { 'type': 'question',
       'data': {
         'identifier': identifier provided by server,
         'questioner': name of player asking question,
@@ -40,6 +51,17 @@
         'card': card in question
         }
     }
+    
+###Declaration
+    { 'type': 'declaration',
+      'data': {
+        'identifier': identifier provided by server,
+        'name': name of player,
+        'card_set': set being declared
+        'declared_map': [
+            { 'card': card, 'player': player name }
+        ]
+      } 
 
 ##Server Messages 
 
@@ -63,22 +85,30 @@
     }
      
         
-###Game Update (still needs work)
+###Game Update
     { 'message_type':'game_update'
     'data': {
-        'teams':
-            - "players": [
-                - "name": name
-                - "card_count": card count
-                - "status": game connection status ]
-            - "sets": count of sets won
-        - "last_turn": {}
-            - "questioner": player name
-            - "respondent: player name
-            - "card": card 
-            - "outcome": outcome
-        - (client could figure this out for every turn except who is up first, so let's just provide it
-        "current_turn": player name
-        - "cards": [] list of cards
-        - "state": how to pass back state?
+        'teams': {
+            'players': [
+                'name': name,
+                'card_count': card count,
+                'status': game connection status 
+            ],
+            'sets': count of sets won
+            },
+        'last_turn': {
+            'turn_type': question or declaration
+            'outcome': outcome
+            IF Question:
+            'questioner': player name,
+            'respondent': player name,
+            'card': card 
+            IF Declaration:
+            'player': player,
+            'card_set' card set
+            },
+        'current_turn': player name,
+        'cards': [] list of cards,
+        'state': data frame
+        }
 

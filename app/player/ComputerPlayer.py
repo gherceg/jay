@@ -11,4 +11,6 @@ class ComputerPlayer(PlayerInterface):
 
     def received_next_turn(self, turn: Turn):
         super().received_next_turn(turn)
-        print("Computer player received a game update")
+
+    def received_declaration(self, declaration: Declaration):
+        super().received_declaration(declaration)

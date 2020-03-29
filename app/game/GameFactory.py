@@ -6,6 +6,7 @@ from app.player.NetworkPlayer import NetworkPlayer
 from app.player.ComputerPlayer import ComputerPlayer
 from app.network.NetworkDelegate import NetworkDelegate
 from app.util.UtilMethods import distribute_cards
+from app.Constants import *
 
 
 class GameFactory:
@@ -21,7 +22,7 @@ class GameFactory:
         players = GameFactory.setup_players(settings, teams)
 
         # if virtual deck has been specified, distribute cards now
-        if settings['virtual_deck']:
+        if settings[VIRTUAL_DECK]:
             cards = distribute_cards(len(players))
             for player, hand in zip(players, cards):
                 player.set_initial_cards(hand)
@@ -40,10 +41,10 @@ class GameFactory:
     @staticmethod
     def setup_teams(settings: dict) -> tuple:
         teams: list
-        if 'teams' in settings:
-            teams = settings['teams']
+        if TEAMS_KEY in settings:
+            teams = settings[TEAMS_KEY]
         else:
-            teams = GameFactory.generate_teams(settings['players'])
+            teams = GameFactory.generate_teams(settings[PLAYERS_KEY])
         return tuple(teams)
 
     @staticmethod
@@ -51,18 +52,18 @@ class GameFactory:
         """Set up each player and assign to teams"""
 
         all_players = []
-        for player in settings['players']:
-            all_players.append(player['name'])
+        for player in settings[PLAYERS_KEY]:
+            all_players.append(player[NAME])
 
         players = []
-        for player in settings['players']:
-            opposing_team = GameFactory.get_opposing_team(teams, player['name'])
-            teammates = GameFactory.get_teammates(teams, player['name'])
+        for player in settings[PLAYERS_KEY]:
+            opposing_team = GameFactory.get_opposing_team(teams, player[NAME])
+            teammates = GameFactory.get_teammates(teams, player[NAME])
 
-            if player['type'] == 'network':
-                player_to_add = NetworkPlayer(player['name'], teammates, opposing_team)
-            elif player['type'] == 'computer':
-                player_to_add = ComputerPlayer(player['name'], teammates, opposing_team)
+            if player[PLAYER_TYPE] == NETWORK_PLAYER:
+                player_to_add = NetworkPlayer(player[NAME], teammates, opposing_team)
+            elif player[PLAYER_TYPE] == COMPUTER_PLAYER:
+                player_to_add = ComputerPlayer(player[NAME], teammates, opposing_team)
             else:
                 raise ValueError(f'Unrecognized player type key {player["type"]}')
             players.append(player_to_add)
@@ -88,12 +89,12 @@ class GameFactory:
             raise ValueError('Only have support for 2 teams')
         team_one = copy.deepcopy(teams[0])
         team_two = copy.deepcopy(teams[1])
-        if player_name in team_one['players']:
-            team_one['players'].remove(player_name)
-            return tuple(team_one['players'])
-        elif player_name in team_two['players']:
-            team_two['players'].remove(player_name)
-            return tuple(team_two['players'])
+        if player_name in team_one[PLAYERS_KEY]:
+            team_one[PLAYERS_KEY].remove(player_name)
+            return tuple(team_one[PLAYERS_KEY])
+        elif player_name in team_two[PLAYERS_KEY]:
+            team_two[PLAYERS_KEY].remove(player_name)
+            return tuple(team_two[PLAYERS_KEY])
         else:
             raise ValueError(f'Could not find team for player {player_name}')
 
@@ -101,12 +102,10 @@ class GameFactory:
     def generate_teams(players: list) -> list:
         player_names = []
         for player in players:
-            player_names.append(player['name'])
+            player_names.append(player[NAME])
 
         random.shuffle(player_names)
         # force int division
         half = len(player_names) // 2
         return [{'name': "Team 1", "players": player_names[:half]},
                 {"name": "Team 2", "players": player_names[half:]}]
-
-    
