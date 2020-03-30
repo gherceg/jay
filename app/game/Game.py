@@ -14,6 +14,7 @@ class Game(QuestionDelegate, TurnDelegate):
         self.network_delegate = network_delegate
         self.pin = 1234
         self.ledger = []
+        self.up_next = None
 
         # create a dictionary of players for easy lookup
         self.player_ids = {}
@@ -50,7 +51,7 @@ class Game(QuestionDelegate, TurnDelegate):
         contents[MESSAGE_TYPE] = GAME_UPDATE
         contents[LAST_TURN] = turn.to_dict()
         contents[CARDS] = cards
-        # contents['current_turn'] = self.game.up_next
+        contents[NEXT_TURN] = self.up_next
         contents[TEAMS_KEY] = self.build_teams_package()
 
         self.network_delegate.broadcast_message(player, contents)
@@ -61,13 +62,21 @@ class Game(QuestionDelegate, TurnDelegate):
         contents[MESSAGE_TYPE] = GAME_UPDATE
         contents[LAST_TURN] = declaration.to_dict()
         contents[CARDS] = cards
-        # contents['current_turn'] = self.game.up_next
+        contents[NEXT_TURN] = self.up_next
         contents[TEAMS_KEY] = self.build_teams_package()
 
         self.network_delegate.broadcast_message(player, contents)
 
     def get_player_names(self):
         return list(self.players.keys())
+
+    def get_teams_json(self) -> dict:
+        team_json = []
+        for team_name, players in self.teams.items():
+            team_entry = {NAME: team_name, PLAYERS_KEY: players}
+            team_json.append(team_entry)
+
+        return team_json
 
     # PRIVATE METHODS
 

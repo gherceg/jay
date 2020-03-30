@@ -36,6 +36,8 @@ class GameFactory:
             elif isinstance(player, ComputerPlayer):
                 player.set_question_delegate(game)
 
+        game.up_next = GameFactory.get_first_turn(players)
+
         return game
 
     @staticmethod
@@ -109,3 +111,11 @@ class GameFactory:
         half = len(player_names) // 2
         return [{'name': "Team 1", "players": player_names[:half]},
                 {"name": "Team 2", "players": player_names[half:]}]
+
+    @staticmethod
+    def get_first_turn(players: tuple) -> str:
+        player_names = []
+        for player in players:
+            player_names.append(player.name)
+
+        return random.choice(player_names)

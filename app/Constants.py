@@ -18,6 +18,7 @@ VIRTUAL_DECK = "virtual_deck"
 NETWORK_PLAYER = "network"
 COMPUTER_PLAYER = "computer"
 CARD_COUNT = "card_count"
+NEXT_TURN = "next_turn"
 
 # Client Message Types
 HANDSHAKE = "handshake"

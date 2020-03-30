@@ -68,10 +68,7 @@ Card Sets are defined as follows:
 ###Game Created
     { 'type': 'created_game',
       'data': {
-            'identifier': identifier provided by server,
-            'pin': pin to connect to game,
-            'players': list of all players in game,
-            'teams': list of list of players for each team,
+            'pin': pin to connect to game
             }
     }
      
@@ -81,6 +78,10 @@ Card Sets are defined as follows:
       'data': { 
             'identifier': identifier provided by server,
             'cards': if virtual deck was specified, list of cards 
+            'teams': [
+                {'name':name of team, 'players':list of player names},
+            ]
+            'next_turn': name of player who is up
        }
     }
      

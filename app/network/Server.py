@@ -41,7 +41,7 @@ class Server(NetworkDelegate):
         data = message[DATA]
 
         if message[MESSAGE_TYPE] == CREATE_GAME:
-            return self.handle_create_game_request(websocket, data)
+            return self.handle_create_game_request(data)
 
         elif message[MESSAGE_TYPE] == CONNECT_TO_GAME:
             return self.handle_connect_to_game_request(websocket, data)
@@ -70,7 +70,7 @@ class Server(NetworkDelegate):
         elif message[MESSAGE_TYPE] == HANDSHAKE:
             logger.info('Connecting New Client')
 
-    def handle_create_game_request(self, websocket: WebSocket, data: dict) -> str:
+    def handle_create_game_request(self, data: dict) -> str:
         if self.game:
             logger.info('Deleting Existing Game')
             self.game = None
@@ -97,7 +97,8 @@ class Server(NetworkDelegate):
                 DATA: {
                     IDENTIFIER: client_id,
                     CARDS: self.game.players[data[NAME]].get_cards(),
-                    TEAMS_KEY: self.game.teams
+                    TEAMS_KEY: self.game.get_teams_json(),
+                    NEXT_TURN: self.game.up_next
                 }
             })
         else:
