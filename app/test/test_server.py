@@ -50,17 +50,15 @@ def connect_game_json() -> dict:
 def expected_create_game_response() -> dict:
     return {'type': 'created_game',
             'data': {
-                'identifier': 'a',
                 'pin': 1234,
-                'players': ['a', 'b', 'c', 'd', 'e', 'f'],
-                'teams': {'team1': ['a', 'b', 'c'], 'team2': ['d', 'e', 'f']},
             }
-            }
+        }
 
 
 def expected_connect_game_response() -> dict:
     return {'type': 'connected_to_game',
             'data': {'identifier': 'b',
                      'cards': [],
+                     'teams': {'team1': ['a', 'b', 'c'], 'team2': ['d', 'e', 'f']},
                      }
             }

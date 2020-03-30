@@ -17,6 +17,7 @@ DECLARED_MAP = "declared_map"
 VIRTUAL_DECK = "virtual_deck"
 NETWORK_PLAYER = "network"
 COMPUTER_PLAYER = "computer"
+CARD_COUNT = "card_count"
 
 # Client Message Types
 HANDSHAKE = "handshake"
@@ -37,6 +38,7 @@ ERROR = "error"
 DESCRIPTION = "description"
 TURN_TYPE = "turn_type"
 LAST_TURN = "last_turn"
+
 # card_set values
 LOW_SPADES_KEY = "low_spades"
 HIGH_SPADES_KEY = "high_spades"

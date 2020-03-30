@@ -78,16 +78,11 @@ class Server(NetworkDelegate):
         logger.info('Creating New Game')
         self.game = GameFactory.create_game(self, data)
 
-        client_id = self.register_new_client(data[NAME], websocket)
-
         # TODO: improve generating server response
         return json.dumps({
             MESSAGE_TYPE: CREATED_GAME,
             DATA: {
-                IDENTIFIER: client_id,
                 PIN: self.game.pin,
-                PLAYERS_KEY: self.game.get_player_names(),
-                TEAMS_KEY: self.game.teams,
             }
         })
 
@@ -101,8 +96,8 @@ class Server(NetworkDelegate):
                 MESSAGE_TYPE: CONNECTED_TO_GAME,
                 DATA: {
                     IDENTIFIER: client_id,
-                    # TODO: cards could be empty
-                    CARDS: self.game.players[data[NAME]].get_cards()
+                    CARDS: self.game.players[data[NAME]].get_cards(),
+                    TEAMS_KEY: self.game.teams
                 }
             })
         else:

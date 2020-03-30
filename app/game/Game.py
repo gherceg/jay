@@ -23,7 +23,7 @@ class Game(QuestionDelegate, TurnDelegate):
 
         self.teams = {}
         for team in teams:
-            self.teams[team['name']] = team['players']
+            self.teams[team[NAME]] = team[PLAYERS_KEY]
 
     def handle_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
@@ -82,8 +82,8 @@ class Game(QuestionDelegate, TurnDelegate):
             team_players = []
             for player_name in players:
                 player_dict = {
-                    'name': player_name,
-                    'card_count': len(self.players[player_name].get_cards())
+                    NAME: player_name,
+                    CARD_COUNT: len(self.players[player_name].get_cards())
                 }
                 team_players.append(player_dict)
             teams_dict[name] = team_players
