@@ -1,5 +1,4 @@
 import logging
-from logging import exception
 import json
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
@@ -14,23 +13,28 @@ logger = logging.getLogger(__name__)
 
 
 class Server(NetworkDelegate):
-    """Holds onto websocket connections"""
-    game: Game = None
+    """Inspects incoming messages to determine which game to update, and sends messages back to clients"""
 
     def __init__(self):
         self.connections: list = []
         self.clients: dict = {}
+        self.game = None
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.connections.append(websocket)
+        logger.info('Connected new client %s' % websocket.client)
 
     def remove(self, websocket: WebSocket):
         self.connections.remove(websocket)
+        logger.info('Disconnecting client %s' % websocket.client)
 
-    async def handle_message(self, websocket: WebSocket, message: str) -> dict:
+    async def handle_message(self, websocket: WebSocket, message: str) -> str:
         message = self.parse(message)
-        logger.debug(message)
+        if message.is_empty():
+            return self.generate_error('Cannot parse message: Received unexpected format.')
+
+        logger.debug('Received message from client: %s' % message)
 
         if MESSAGE_TYPE not in message:
             return self.generate_error('Cannot parse message: Missing message_type field')
@@ -66,15 +70,14 @@ class Server(NetworkDelegate):
         elif message[MESSAGE_TYPE] == HANDSHAKE:
             logger.info('Connecting New Client')
 
-    def handle_create_game_request(self, data: dict) -> dict:
+    def handle_create_game_request(self, data: dict) -> str:
         if self.game:
             logger.info('Deleting Existing Game')
             self.game = None
 
-        logger.info('Creating New Game')
         self.game = GameFactory.create_game(self, data)
+        logger.info('Create Game Request: created new game with pin %s' % self.game.pin)
 
-        # TODO: improve generating server response
         return json.dumps({
             MESSAGE_TYPE: CREATED_GAME,
             DATA: {
@@ -82,11 +85,9 @@ class Server(NetworkDelegate):
             }
         })
 
-    def handle_enter_pin_request(self, data: dict) -> dict:
+    def handle_enter_pin_request(self, data: dict) -> str:
         if PIN in data:
             if self.game and data[PIN] == self.game.pin:
-                logger.info('Gathering game info for pin %s' % self.game.pin)
-
                 return json.dumps({
                     MESSAGE_TYPE: JOINED_GAME,
                     DATA: {
@@ -99,7 +100,7 @@ class Server(NetworkDelegate):
         else:
             return self.generate_error('Enter Pin Request: Missing pin field')
 
-    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> dict:
+    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> str:
         # check to make sure the expected fields exist
         if NAME in data:
             client_id = self.register_new_client(data[NAME], websocket)
@@ -134,8 +135,14 @@ class Server(NetworkDelegate):
         else:
             return self.generate_error('Declaration Request: Missing player, card_set or declared_map field')
 
+    def register_new_client(self, identifier: str, websocket: WebSocket) -> str:
+        logger.info('Registering new client with id: %s' % identifier)
+        self.clients[identifier] = websocket
+        return identifier
+
     @staticmethod
-    def generate_error(message: str) -> dict:
+    def generate_error(message: str) -> str:
+        logger.error(message)
         return json.dumps({
             MESSAGE_TYPE: ERROR,
             DATA: {
@@ -143,10 +150,15 @@ class Server(NetworkDelegate):
             }
         })
 
-    def register_new_client(self, identifier: str, websocket: WebSocket) -> str:
-        logger.info('Registering new client with id: %s' % identifier)
-        self.clients[identifier] = websocket
-        return identifier
+    @staticmethod
+    def parse(message) -> Optional:
+        if isinstance(message, str):
+            return Optional(json.loads(message))
+        elif isinstance(message, dict):
+            return Optional(message)
+            # return json.dumps(message)
+
+        return Optional.empty()
 
     # Network Delegate Implementation
     def broadcast_message(self, client_id: str, contents: dict):
@@ -158,13 +170,3 @@ class Server(NetworkDelegate):
         # websocket: WebSocket = self.clients[client_id]
         # if isinstance(websocket, WebSocket):
         #     websocket.send_json(message)
-
-    @staticmethod
-    def parse(message):
-        if isinstance(message, str):
-            return json.loads(message)
-        elif isinstance(message, dict):
-            return message
-            # return json.dumps(message)
-
-        return None
