@@ -29,12 +29,12 @@ class Server(NetworkDelegate):
         self.connections.remove(websocket)
         # logger.info('Disconnecting client %s' % websocket.client)
 
-    async def handle_message(self, websocket: WebSocket, message: str) -> str:
-        message = self.parse(message)
-        if message.is_empty():
+    async def handle_message(self, websocket: WebSocket, message: str) -> dict:
+        optional_message = self.parse(message)
+        if optional_message.is_empty():
             return self.generate_error('Cannot parse message: Received unexpected format.')
 
-        message = message.value
+        message = optional_message.value
 
         logger.debug('Received message from client: %s' % message)
 
@@ -72,7 +72,7 @@ class Server(NetworkDelegate):
         elif message[MESSAGE_TYPE] == HANDSHAKE:
             logger.info('Connecting New Client')
 
-    def handle_create_game_request(self, data: dict) -> str:
+    def handle_create_game_request(self, data: dict) -> dict:
         if self.game:
             logger.info('Deleting Existing Game')
             self.game = None
@@ -80,29 +80,29 @@ class Server(NetworkDelegate):
         self.game = GameFactory.create_game(self, data)
         logger.info('Create Game Request: created new game with pin %s' % self.game.pin)
 
-        return json.dumps({
+        return {
             MESSAGE_TYPE: CREATED_GAME,
             DATA: {
                 PIN: self.game.pin,
             }
-        })
+        }
 
-    def handle_enter_pin_request(self, data: dict) -> str:
+    def handle_enter_pin_request(self, data: dict) -> dict:
         if PIN in data:
             if self.game and data[PIN] == self.game.pin:
-                return json.dumps({
+                return {
                     MESSAGE_TYPE: JOINED_GAME,
                     DATA: {
                         TEAMS_KEY: self.game.get_teams_json(),
                         NEXT_TURN: self.game.up_next
                     }
-                })
+                }
             else:
                 return self.generate_error('Enter Pin Request: Invalid pin')
         else:
             return self.generate_error('Enter Pin Request: Missing pin field')
 
-    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> str:
+    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> dict:
         # check to make sure the expected fields exist
         if NAME in data:
             client_id = self.register_new_client(data[NAME], websocket)
@@ -112,13 +112,13 @@ class Server(NetworkDelegate):
                 else:
                     return self.generate_error('Select Player Request: Missing cards field')
 
-            return json.dumps({
+            return {
                 MESSAGE_TYPE: SELECTED_PLAYER,
                 DATA: {
                     IDENTIFIER: client_id,
                     CARDS: self.game.players[data[NAME]].get_cards(),
                 }
-            })
+            }
         else:
             return self.generate_error('Select Player Request: Missing name field')
 
@@ -143,14 +143,14 @@ class Server(NetworkDelegate):
         return identifier
 
     @staticmethod
-    def generate_error(message: str) -> str:
+    def generate_error(message: str) -> dict:
         logger.error(message)
-        return json.dumps({
+        return {
             MESSAGE_TYPE: ERROR,
             DATA: {
                 DESCRIPTION: message
             }
-        })
+        }
 
     @staticmethod
     def parse(message) -> Optional:
