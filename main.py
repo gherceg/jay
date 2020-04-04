@@ -20,6 +20,6 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_json()
             message = await server.handle_message(websocket, data)
             if message:
-                await websocket.send_text(message)
+                await websocket.send_json(message)
     except WebSocketDisconnect:
         server.remove(websocket)

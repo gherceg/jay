@@ -28,15 +28,15 @@ class Server(NetworkDelegate):
     def remove(self, websocket: WebSocket):
         self.connections.remove(websocket)
 
-    async def handle_message(self, websocket: WebSocket, message: str) -> str:
+    async def handle_message(self, websocket: WebSocket, message: str) -> dict:
         message = self.parse(message)
         logger.debug(message)
 
         if MESSAGE_TYPE not in message:
-            raise exception('Unknown Message Format: Server.py: No MESSAGE_TYPE field found in message.')
+            return self.generate_error('Cannot parse message: Missing message_type field')
 
         if DATA not in message:
-            raise exception('Unknown Message Format: Server.py: No DATA field found in message.')
+            return self.generate_error('Cannot parse message: Missing data field')
 
         data = message[DATA]
 
@@ -66,7 +66,7 @@ class Server(NetworkDelegate):
         elif message[MESSAGE_TYPE] == HANDSHAKE:
             logger.info('Connecting New Client')
 
-    def handle_create_game_request(self, data: dict) -> str:
+    def handle_create_game_request(self, data: dict) -> dict:
         if self.game:
             logger.info('Deleting Existing Game')
             self.game = None
@@ -82,7 +82,7 @@ class Server(NetworkDelegate):
             }
         })
 
-    def handle_enter_pin_request(self, data: dict):
+    def handle_enter_pin_request(self, data: dict) -> dict:
         if PIN in data:
             if self.game and data[PIN] == self.game.pin:
                 logger.info('Gathering game info for pin %s' % self.game.pin)
@@ -103,7 +103,6 @@ class Server(NetworkDelegate):
         # check to make sure the expected fields exist
         if NAME in data:
             client_id = self.register_new_client(data[NAME], websocket)
-            logger.info('Setting client %s cards to %s.' % (data[IDENTIFIER], data[CARDS]))
             if self.game.virtual_deck is False:
                 if CARDS in data:
                     self.game.players[data[NAME]].set_initial_cards(data[CARDS])
