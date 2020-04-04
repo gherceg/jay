@@ -23,16 +23,18 @@ class Server(NetworkDelegate):
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.connections.append(websocket)
-        logger.info('Connected new client %s' % websocket.client)
+        # logger.info('Connected new client %s' % websocket.client)
 
     def remove(self, websocket: WebSocket):
         self.connections.remove(websocket)
-        logger.info('Disconnecting client %s' % websocket.client)
+        # logger.info('Disconnecting client %s' % websocket.client)
 
     async def handle_message(self, websocket: WebSocket, message: str) -> str:
         message = self.parse(message)
         if message.is_empty():
             return self.generate_error('Cannot parse message: Received unexpected format.')
+
+        message = message.value
 
         logger.debug('Received message from client: %s' % message)
 
