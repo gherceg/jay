@@ -29,8 +29,7 @@ Card Sets are defined as follows:
 ###Enter Pin
     { 'type': 'enter_pin',
      'data': {
-        'pin': pin for game,
-        'name': player name 
+        'pin': pin for game
         }
     }
     

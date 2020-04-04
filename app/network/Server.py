@@ -83,25 +83,23 @@ class Server(NetworkDelegate):
         })
 
     def handle_enter_pin_request(self, data: dict):
-        if self.game and data[PIN] == self.game.pin:
-            logger.info('Gathering game info for pin %s' % self.game.pin)
+        if PIN in data:
+            if self.game and data[PIN] == self.game.pin:
+                logger.info('Gathering game info for pin %s' % self.game.pin)
 
-            return json.dumps({
-                MESSAGE_TYPE: JOINED_GAME,
-                DATA: {
-                    TEAMS_KEY: self.game.get_teams_json(),
-                    NEXT_TURN: self.game.up_next
-                }
-            })
+                return json.dumps({
+                    MESSAGE_TYPE: JOINED_GAME,
+                    DATA: {
+                        TEAMS_KEY: self.game.get_teams_json(),
+                        NEXT_TURN: self.game.up_next
+                    }
+                })
+            else:
+                return self.generate_error('Enter Pin Request: Invalid pin')
         else:
-            return json.dumps({
-                MESSAGE_TYPE: ERROR,
-                DATA: {
-                    DESCRIPTION: 'Invalid PIN'
-                }
-            })
+            return self.generate_error('Enter Pin Request: Missing pin field')
 
-    def handle_select_player_request(self, websocket: WebSocket, data: dict):
+    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> dict:
         # check to make sure the expected fields exist
         if NAME in data:
             client_id = self.register_new_client(data[NAME], websocket)
@@ -110,8 +108,8 @@ class Server(NetworkDelegate):
                 if CARDS in data:
                     self.game.players[data[NAME]].set_initial_cards(data[CARDS])
                 else:
-                    raise exception(
-                        'Unknown Message Format: Server.py: SELECT_PLAYER: Expected CARDS key not found')
+                    return self.generate_error('Select Player Request: Missing cards field')
+
             return json.dumps({
                 MESSAGE_TYPE: SELECTED_PLAYER,
                 DATA: {
@@ -120,16 +118,14 @@ class Server(NetworkDelegate):
                 }
             })
         else:
-            raise exception(
-                'Unknown Message Format: Server.py: SELECT_PLAYER: Message does not have NAME key')
+            return self.generate_error('Select Player Request: Missing name field')
 
     def handle_question(self, data: dict):
         logger.info('Received question')
         if QUESTIONER in data and RESPONDENT in data and CARD in data:
             self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
         else:
-            raise exception(
-                'Unknown Message Format: Server.py: QUESTION: Message does not have QUESTIONER, RESPONDENT, or CARD')
+            return self.generate_error('Question Request: Missing questioner, respondent or card field')
 
     def handle_declaration(self, data: dict):
         logger.info('Received declaration')
@@ -137,8 +133,16 @@ class Server(NetworkDelegate):
         if PLAYER_KEY in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
             self.game.handle_declaration(data[PLAYER_KEY], data[CARD_SET], data[DECLARED_MAP])
         else:
-            raise exception(
-                'Unknown Message Format: Server.py: DECLARATION: Message does not have PLAYER_KEY, CARD_SET, or DECLARED_MAP')
+            return self.generate_error('Declaration Request: Missing player, card_set or declared_map field')
+
+    @staticmethod
+    def generate_error(message: str) -> dict:
+        return json.dumps({
+            MESSAGE_TYPE: ERROR,
+            DATA: {
+                DESCRIPTION: message
+            }
+        })
 
     def register_new_client(self, identifier: str, websocket: WebSocket) -> str:
         logger.info('Registering new client with id: %s' % identifier)
