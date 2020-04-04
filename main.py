@@ -22,9 +22,9 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
-            message = await server.handle_message(websocket, data)
-            if message:
-                logger.info(message)
-                await websocket.send_json(message)
+            await server.handle_message(websocket, data)
+            # if message:
+            #     logger.info(message)
+            #     await websocket.send_json(message)
     except WebSocketDisconnect:
         server.remove(websocket)

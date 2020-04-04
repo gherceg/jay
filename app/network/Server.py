@@ -23,49 +23,49 @@ class Server(NetworkDelegate):
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
+        logger.info('Connected new client {0}'.format(websocket.client))
         self.connections.append(websocket)
-        # logger.info('Connected new client %s' % websocket.client)
 
     def remove(self, websocket: WebSocket):
+        logger.info('Disconnecting client {0}'.format(websocket.client))
         self.connections.remove(websocket)
-        # logger.info('Disconnecting client %s' % websocket.client)
 
-    async def handle_message(self, websocket: WebSocket, message: str) -> Dict:
+    async def handle_message(self, websocket: WebSocket, message: str):
         optional_message = self.parse(message)
         if optional_message.is_empty():
-            return self.generate_error('Cannot parse message: Received unexpected format.')
+            await self.send_error(websocket, 'Cannot parse message: Received unexpected format.')
 
         message = optional_message.value
 
-        logger.debug('Received message from client: %s' % message)
+        logger.debug('Received message from client: {0}'.format(message))
 
         if MESSAGE_TYPE not in message:
-            return self.generate_error('Cannot parse message: Missing message_type field')
+            await self.send_error(websocket, 'Cannot parse message: Missing message_type field')
 
         if DATA not in message:
-            return self.generate_error('Cannot parse message: Missing data field')
+            await self.send_error(websocket, 'Cannot parse message: Missing data field')
 
         data = message[DATA]
 
         if message[MESSAGE_TYPE] == CREATE_GAME:
-            return self.handle_create_game_request(data)
+            await self.handle_create_game_request(websocket, data)
 
         elif message[MESSAGE_TYPE] == ENTER_PIN:
-            return self.handle_enter_pin_request(data)
+            await self.handle_enter_pin_request(websocket, data)
 
         elif message[MESSAGE_TYPE] == SELECT_PLAYER:
-            self.handle_select_player_request(websocket, data)
+            await self.handle_select_player_request(websocket, data)
 
         elif message[MESSAGE_TYPE] == QUESTION:
             if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys:
-                self.handle_question(data)
+                await self.handle_question(websocket, data)
             else:
                 logger.error('Server.py: QUESTION missing client id. Closing connection.')
                 await websocket.close()
 
         elif message[MESSAGE_TYPE] == DECLARATION:
             if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys:
-                self.handle_declaration(data)
+                await self.handle_declaration(websocket, data)
             else:
                 logger.error('Server.py: DECLARATION missing client id. Closing connection.')
                 await websocket.close()
@@ -73,37 +73,39 @@ class Server(NetworkDelegate):
         elif message[MESSAGE_TYPE] == HANDSHAKE:
             logger.info('Connecting New Client')
 
-    def handle_create_game_request(self, data: dict) -> Dict:
+    async def handle_create_game_request(self, websocket: WebSocket, data: dict):
         if self.game:
             logger.info('Deleting Existing Game')
             self.game = None
 
         self.game = GameFactory.create_game(self, data)
-        logger.info('Create Game Request: created new game with pin %s' % self.game.pin)
+        logger.info('Create Game Request: created new game with pin {0}'.format(self.game.pin))
 
-        return {
+        data_to_send = {
             MESSAGE_TYPE: CREATED_GAME,
             DATA: {
                 PIN: self.game.pin,
             }
         }
+        await self.send_message(websocket, data_to_send)
 
-    def handle_enter_pin_request(self, data: dict) -> Dict:
+    async def handle_enter_pin_request(self, websocket: WebSocket, data: dict):
         if PIN in data:
             if self.game and data[PIN] == self.game.pin:
-                return {
+                data_to_send = {
                     MESSAGE_TYPE: JOINED_GAME,
                     DATA: {
                         TEAMS_KEY: self.game.get_teams_json(),
                         NEXT_TURN: self.game.up_next
                     }
                 }
+                await self.send_message(websocket, data_to_send)
             else:
-                return self.generate_error('Enter Pin Request: Invalid pin')
+                await self.send_error(websocket, 'Enter Pin Request: Invalid pin')
         else:
-            return self.generate_error('Enter Pin Request: Missing pin field')
+            await self.send_error(websocket, 'Enter Pin Request: Missing pin field')
 
-    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> Dict:
+    async def handle_select_player_request(self, websocket: WebSocket, data: dict):
         # check to make sure the expected fields exist
         if NAME in data:
             client_id = self.register_new_client(data[NAME], websocket)
@@ -111,47 +113,54 @@ class Server(NetworkDelegate):
                 if CARDS in data:
                     self.game.players[data[NAME]].set_initial_cards(data[CARDS])
                 else:
-                    return self.generate_error('Select Player Request: Missing cards field')
+                    await self.send_error(websocket, 'Select Player Request: Missing cards field')
 
-            return {
+            data_to_send = {
                 MESSAGE_TYPE: SELECTED_PLAYER,
                 DATA: {
                     IDENTIFIER: client_id,
                     CARDS: self.game.players[data[NAME]].get_cards(),
                 }
             }
+            await self.send_message(websocket, data_to_send)
         else:
-            return self.generate_error('Select Player Request: Missing name field')
+            await self.send_error('Select Player Request: Missing name field')
 
-    def handle_question(self, data: dict):
+    async def handle_question(self, websocket: WebSocket, data: dict):
         logger.info('Received question')
         if QUESTIONER in data and RESPONDENT in data and CARD in data:
             self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
         else:
-            return self.generate_error('Question Request: Missing questioner, respondent or card field')
+            await self.send_error(websocket, 'Question Request: Missing questioner, respondent or card field')
 
-    def handle_declaration(self, data: dict):
+    async def handle_declaration(self, websocket: WebSocket, data: dict):
         logger.info('Received declaration')
         card_set = card_set_for_key(data[CARD_SET])
         if PLAYER_KEY in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
             self.game.handle_declaration(data[PLAYER_KEY], data[CARD_SET], data[DECLARED_MAP])
         else:
-            return self.generate_error('Declaration Request: Missing player, card_set or declared_map field')
+            await self.send_error(websocket, 'Declaration Request: Missing player, card_set or declared_map field')
 
     def register_new_client(self, identifier: str, websocket: WebSocket) -> str:
-        logger.info('Registering new client with id: %s' % identifier)
+        logger.info('Registering new client with id: {0}'.format(identifier))
         self.clients[identifier] = websocket
         return identifier
 
     @staticmethod
-    def generate_error(message: str) -> Dict:
+    async def send_error(websocket: WebSocket, message: str):
         logger.error(message)
-        return {
+        data = {
             MESSAGE_TYPE: ERROR,
             DATA: {
                 DESCRIPTION: message
             }
         }
+        await websocket.send_json(data)
+
+    @staticmethod
+    async def send_message(websocket: WebSocket, data: Dict):
+        logger.info('Sending message to websocket {0}: {1}'.format(websocket.client, data))
+        await websocket.send_json(data)
 
     @staticmethod
     def parse(message) -> Optional:
