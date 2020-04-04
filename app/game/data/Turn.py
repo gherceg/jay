@@ -13,17 +13,9 @@ class Turn:
 
     def __repr__(self):
         if self.outcome:
-            return "%s received from %s the %s" % (
-                self.questioner,
-                self.respondent,
-                self.card,
-            )
+            return "{0} received from {1} the {2}".format(self.questioner, self.respondent, self.card)
         else:
-            return "%s asked %s for the %s" % (
-                self.questioner,
-                self.respondent,
-                self.card,
-            )
+            return "{0} asked {1} for the {2}".format(self.questioner, self.respondent, self.card)
 
     def to_dict(self) -> dict:
         return {'type': 'turn',

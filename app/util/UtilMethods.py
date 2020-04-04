@@ -9,7 +9,7 @@ def set_for_card(card) -> CardSet:
     for card_set in CardSet:
         if card in card_set.value:
             return card_set
-    raise ValueError("CardSet does not exist for card %s" % card)
+    raise ValueError("CardSet does not exist for card {0}".format(card))
 
 
 def deck_of_cards() -> tuple:

@@ -10,15 +10,9 @@ class Declaration:
 
     def __repr__(self):
         if self.outcome:
-            return "%s successfully declared the %s" % (
-                self.player,
-                self.card_set
-            )
+            return "{0} successfully declared the {1}".format(self.player, self.card_set)
         else:
-            return "%s failed to declare the %s" % (
-                self.player,
-                self.card_set
-            )
+            return "{0} failed to declare the {1}".format(self.player, self.card_set)
 
     def to_dict(self) -> dict:
         return {'type': 'declaration',
