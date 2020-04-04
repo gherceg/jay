@@ -24,16 +24,18 @@ NEXT_TURN = "next_turn"
 HANDSHAKE = "handshake"
 
 CREATE_GAME = "create_game"
-CONNECT_TO_GAME = "connect_to_game"
-SET_CARDS = "update_cards"
+ENTER_PIN = "enter_pin"
+SELECT_PLAYER = "select_player"
 QUESTION = "question"
 DECLARATION = "declaration"
+
 
 NEW_TURN_KEY = "new_turn"
 
 # Server Message Types
 CREATED_GAME = "created_game"
-CONNECTED_TO_GAME = "connected_to_game"
+JOINED_GAME = "joined_game"
+SELECTED_PLAYER = "selected_player"
 GAME_UPDATE = "game_update"
 ERROR = "error"
 DESCRIPTION = "description"

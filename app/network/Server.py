@@ -43,15 +43,11 @@ class Server(NetworkDelegate):
         if message[MESSAGE_TYPE] == CREATE_GAME:
             return self.handle_create_game_request(data)
 
-        elif message[MESSAGE_TYPE] == CONNECT_TO_GAME:
-            return self.handle_connect_to_game_request(websocket, data)
+        elif message[MESSAGE_TYPE] == ENTER_PIN:
+            return self.handle_enter_pin_request(data)
 
-        elif message[MESSAGE_TYPE] == SET_CARDS:
-            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys:
-                self.handle_set_cards(data)
-            else:
-                logger.error('Server.py: SET_CARDS missing client id. Closing connection.')
-                await websocket.close()
+        elif message[MESSAGE_TYPE] == SELECT_PLAYER:
+            self.handle_select_player_request(websocket, data)
 
         elif message[MESSAGE_TYPE] == QUESTION:
             if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys:
@@ -86,17 +82,13 @@ class Server(NetworkDelegate):
             }
         })
 
-    def handle_connect_to_game_request(self, websocket: WebSocket, data: dict):
+    def handle_enter_pin_request(self, data: dict):
         if self.game and data[PIN] == self.game.pin:
-            logger.info('Connecting User to game')
-
-            client_id = self.register_new_client(data[NAME], websocket)
+            logger.info('Gathering game info for pin %s' % self.game.pin)
 
             return json.dumps({
-                MESSAGE_TYPE: CONNECTED_TO_GAME,
+                MESSAGE_TYPE: JOINED_GAME,
                 DATA: {
-                    IDENTIFIER: client_id,
-                    CARDS: self.game.players[data[NAME]].get_cards(),
                     TEAMS_KEY: self.game.get_teams_json(),
                     NEXT_TURN: self.game.up_next
                 }
@@ -109,14 +101,27 @@ class Server(NetworkDelegate):
                 }
             })
 
-    def handle_set_cards(self, data: dict):
+    def handle_select_player_request(self, websocket: WebSocket, data: dict):
         # check to make sure the expected fields exist
-        if CARDS in data:
+        if NAME in data:
+            client_id = self.register_new_client(data[NAME], websocket)
             logger.info('Setting client %s cards to %s.' % (data[IDENTIFIER], data[CARDS]))
-            self.game.players[data[IDENTIFIER]].set_initial_cards(data[CARDS])
+            if self.game.virtual_deck is False:
+                if CARDS in data:
+                    self.game.players[data[NAME]].set_initial_cards(data[CARDS])
+                else:
+                    raise exception(
+                        'Unknown Message Format: Server.py: SELECT_PLAYER: Expected CARDS key not found')
+            return json.dumps({
+                MESSAGE_TYPE: SELECTED_PLAYER,
+                DATA: {
+                    IDENTIFIER: client_id,
+                    CARDS: self.game.players[data[NAME]].get_cards(),
+                }
+            })
         else:
             raise exception(
-                'Unknown Message Format: Server.py: SET_CARDS: Message does not have CARDS key')
+                'Unknown Message Format: Server.py: SELECT_PLAYER: Message does not have NAME key')
 
     def handle_question(self, data: dict):
         logger.info('Received question')

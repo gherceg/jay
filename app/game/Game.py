@@ -10,11 +10,12 @@ from app.Constants import *
 class Game(QuestionDelegate, TurnDelegate):
     """Responsible for managing a game and its players"""
 
-    def __init__(self, network_delegate: NetworkDelegate, players: tuple, teams: tuple):
+    def __init__(self, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
         self.network_delegate = network_delegate
         self.pin = 1234
         self.ledger = []
         self.up_next = None
+        self.virtual_deck = virtual_deck
 
         # create a dictionary of players for easy lookup
         self.player_ids = {}
@@ -70,7 +71,7 @@ class Game(QuestionDelegate, TurnDelegate):
     def get_player_names(self):
         return list(self.players.keys())
 
-    def get_teams_json(self) -> dict:
+    def get_teams_json(self) -> list:
         team_json = []
         for team_name, players in self.teams.items():
             team_entry = {NAME: team_name, PLAYERS_KEY: players}

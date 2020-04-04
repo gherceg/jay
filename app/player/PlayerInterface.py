@@ -1,4 +1,9 @@
+import logging
+
 from app.player.StateMethods import *
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class PlayerInterface:
@@ -16,6 +21,7 @@ class PlayerInterface:
         self.state = StateMethods.update_state_with_declaration(self.state, declaration)
 
     def set_initial_cards(self, cards: tuple):
+        logger.info('Setting initial cards for %s: %s' % (self.name, cards))
         self.state = StateMethods.update_state_upon_receiving_cards(self.state, self.name, cards)
 
     def has_card(self, card: str) -> bool:

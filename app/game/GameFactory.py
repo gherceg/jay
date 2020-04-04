@@ -27,7 +27,7 @@ class GameFactory:
             for player, hand in zip(players, cards):
                 player.set_initial_cards(hand)
 
-        game = Game(network_delegate, players, teams)
+        game = Game(network_delegate, players, teams, settings[VIRTUAL_DECK])
 
         # now that the game has been created, set appropriate delegates on players
         for player in players:

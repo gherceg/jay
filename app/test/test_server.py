@@ -16,12 +16,12 @@ def test_game_creation():
         assert data == expected_create_game_response()
 
 
-def test_game_connect():
+def test_enter_pin():
     with client.websocket_connect("/ws") as websocket:
         websocket.send_json(create_game_json())
 
     with client_two.websocket_connect("/ws") as websocket:
-        websocket.send_json(connect_game_json())
+        websocket.send_json(enter_pin_json())
         data: dict = websocket.receive_json()
         # ensure that next_turn is a valid player name
         message_data = data[DATA]
@@ -29,7 +29,7 @@ def test_game_connect():
 
         for (key, value) in message_data.items():
             if key != NEXT_TURN:
-                assert value == expected_connect_game_response()[DATA][key]
+                assert value == expected_joined_game_response()[DATA][key]
 
 
 def create_game_json() -> dict:
@@ -48,10 +48,18 @@ def create_game_json() -> dict:
             }
 
 
-def connect_game_json() -> dict:
-    return {'type': 'connect_to_game',
-            'data': {'pin': 1234,
-                     'name': 'b'}
+def enter_pin_json() -> dict:
+    return {'type': 'enter_pin',
+            'data': {'pin': 1234}
+            }
+
+
+def select_player_json() -> dict:
+    return {'type': 'select_player',
+            'data': {
+                'name': 'a',
+                'cards': ['9h', '10h', 'jh', 'qh', 'kh', 'ah', '2s', '3s']
+            }
             }
 
 
@@ -63,12 +71,18 @@ def expected_create_game_response() -> dict:
             }
 
 
-def expected_connect_game_response() -> dict:
-    return {'type': 'connected_to_game',
-            'data': {'identifier': 'b',
-                     'cards': [],
-                     'teams': [{'name': 'team1', 'players': ['a', 'b', 'c']},
+def expected_joined_game_response() -> dict:
+    return {'type': 'joined_game',
+            'data': {'teams': [{'name': 'team1', 'players': ['a', 'b', 'c']},
                                {'name': 'team2', 'players': ['d', 'e', 'f']}],
                      'next_turn': 'a'
+                     }
+            }
+
+
+def expected_selected_player_response() -> dict:
+    return {'type': 'selected_player',
+            'data': {'identifier': 'a',
+                     'cards': ['9h', '10h', 'jh', 'qh', 'kh', 'ah', '2s', '3s'],
                      }
             }

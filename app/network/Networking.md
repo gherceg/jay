@@ -26,21 +26,21 @@ Card Sets are defined as follows:
         }
     }
     
-###Connect To Game
-    { 'type': 'connect_to_game',
+###Enter Pin
+    { 'type': 'enter_pin',
      'data': {
         'pin': pin for game,
         'name': player name 
         }
     }
     
-###Set Cards
-    { 'type': 'set_cards',
-      'data': {
-        'identifier': identifier provided by server,
-        'cards': list of cards
+###Select Player
+    { 'type': 'select_player',
+     'data': {
+        'name': player name,
+        'cards': list of cards (only expected if using a physical deck) 
         }
-     }
+    }
 
 ###Question
     { 'type': 'question',
@@ -72,12 +72,9 @@ Card Sets are defined as follows:
             }
     }
      
-
-###Connected To Game
-    { 'type': 'connected_to_game',
+###Joined Game
+    { 'type': 'joined_game',
       'data': { 
-            'identifier': identifier provided by server,
-            'cards': if virtual deck was specified, list of cards 
             'teams': [
                 {'name':name of team, 'players':list of player names},
             ]
@@ -85,7 +82,14 @@ Card Sets are defined as follows:
        }
     }
      
-        
+###Selected Player
+      { 'type': 'selected_player',
+      'data': { 
+            'identifier': identifier provided by server,
+            'cards': if virtual deck was specified, list of cards 
+       }
+    }     
+     
 ###Game Update
     { 'message_type':'game_update'
     'data': {
