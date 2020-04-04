@@ -1,6 +1,7 @@
 import logging
 import json
 from starlette.websockets import WebSocket, WebSocketDisconnect
+from typing import Dict
 
 from app.network.NetworkDelegate import NetworkDelegate
 from app.game.GameFactory import GameFactory
@@ -29,7 +30,7 @@ class Server(NetworkDelegate):
         self.connections.remove(websocket)
         # logger.info('Disconnecting client %s' % websocket.client)
 
-    async def handle_message(self, websocket: WebSocket, message: str) -> dict:
+    async def handle_message(self, websocket: WebSocket, message: str) -> Dict:
         optional_message = self.parse(message)
         if optional_message.is_empty():
             return self.generate_error('Cannot parse message: Received unexpected format.')
@@ -72,7 +73,7 @@ class Server(NetworkDelegate):
         elif message[MESSAGE_TYPE] == HANDSHAKE:
             logger.info('Connecting New Client')
 
-    def handle_create_game_request(self, data: dict) -> dict:
+    def handle_create_game_request(self, data: dict) -> Dict:
         if self.game:
             logger.info('Deleting Existing Game')
             self.game = None
@@ -87,7 +88,7 @@ class Server(NetworkDelegate):
             }
         }
 
-    def handle_enter_pin_request(self, data: dict) -> dict:
+    def handle_enter_pin_request(self, data: dict) -> Dict:
         if PIN in data:
             if self.game and data[PIN] == self.game.pin:
                 return {
@@ -102,7 +103,7 @@ class Server(NetworkDelegate):
         else:
             return self.generate_error('Enter Pin Request: Missing pin field')
 
-    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> dict:
+    def handle_select_player_request(self, websocket: WebSocket, data: dict) -> Dict:
         # check to make sure the expected fields exist
         if NAME in data:
             client_id = self.register_new_client(data[NAME], websocket)
@@ -143,7 +144,7 @@ class Server(NetworkDelegate):
         return identifier
 
     @staticmethod
-    def generate_error(message: str) -> dict:
+    def generate_error(message: str) -> Dict:
         logger.error(message)
         return {
             MESSAGE_TYPE: ERROR,

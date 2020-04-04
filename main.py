@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from starlette.websockets import WebSocket, WebSocketDisconnect
+import logging
 
 from app.network.Server import Server
 
 app = FastAPI()
 
 server = Server()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @app.get("/")
 async def read_main():
@@ -20,6 +24,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_json()
             message = await server.handle_message(websocket, data)
             if message:
+                logger.info(message)
                 await websocket.send_json(message)
     except WebSocketDisconnect:
         server.remove(websocket)
