@@ -10,13 +10,13 @@ class NetworkPlayer(PlayerInterface):
         self.delegate = delegate
 
     # Player Interface Methods
-    def received_next_turn(self, turn: Turn):
+    async def received_next_turn(self, turn: Turn):
         super().received_next_turn(turn)
-        self.delegate.broadcast_turn(self.name, turn, self.get_cards())
+        await self.delegate.broadcast_turn(self.name, turn, self.get_cards())
 
-    def received_declaration(self, declaration: Declaration):
+    async def received_declaration(self, declaration: Declaration):
         super().received_declaration(declaration)
-        self.delegate.broadcast_declaration(self.name, declaration, self.get_cards())
+        await self.delegate.broadcast_declaration(self.name, declaration, self.get_cards())
 
 
 

@@ -1,8 +1,9 @@
 import abc
+from typing import Dict
 
 
 class NetworkDelegate(abc.ABC):
 
     @abc.abstractmethod
-    def broadcast_message(self, client_id: str, contents: dict):
+    async def broadcast_message(self, client_id: str, contents: Dict):
         pass

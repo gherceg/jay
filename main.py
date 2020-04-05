@@ -11,6 +11,7 @@ server = Server()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @app.get("/")
 async def read_main():
     return {"msg": "Literature Server"}

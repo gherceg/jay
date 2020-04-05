@@ -2,6 +2,7 @@ import logging
 import json
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from typing import Dict
+import asyncio
 
 from app.network.NetworkDelegate import NetworkDelegate
 from app.game.GameFactory import GameFactory
@@ -57,14 +58,14 @@ class Server(NetworkDelegate):
             await self.handle_select_player_request(websocket, data)
 
         elif message[MESSAGE_TYPE] == QUESTION:
-            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys:
+            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys():
                 await self.handle_question(websocket, data)
             else:
                 logger.error('Server.py: QUESTION missing client id. Closing connection.')
                 await websocket.close()
 
         elif message[MESSAGE_TYPE] == DECLARATION:
-            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys:
+            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys():
                 await self.handle_declaration(websocket, data)
             else:
                 logger.error('Server.py: DECLARATION missing client id. Closing connection.')
@@ -130,7 +131,7 @@ class Server(NetworkDelegate):
     async def handle_question(self, websocket: WebSocket, data: dict):
         logger.info('Received question')
         if QUESTIONER in data and RESPONDENT in data and CARD in data:
-            self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
+            await self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
         else:
             await self.send_error(websocket, 'Question Request: Missing questioner, respondent or card field')
 
@@ -174,12 +175,16 @@ class Server(NetworkDelegate):
         return Optional.empty()
 
     # Network Delegate Implementation
-    def broadcast_message(self, client_id: str, contents: dict):
-        message = self.parse(contents)
+    async def broadcast_message(self, name: str, contents: Dict):
+        # message = self.parse(contents)
         # QS: maybe change from client_id to user name? Where do we want
         # to keep another list of user names to unique client ids. These
         # client IDs will need to be different than the websocket IDs, I think.
         # TODO: come back to figure out how to register clients
-        # websocket: WebSocket = self.clients[client_id]
-        # if isinstance(websocket, WebSocket):
-        #     websocket.send_json(message)
+        logger.info('Client keys: {0}'.format(self.clients.keys()))
+        if name in self.clients.keys():
+            websocket = self.clients[name]
+            await websocket.send_json(contents)
+        else:
+            logger.error('Could not find {0} in client dict'.format(name))
+

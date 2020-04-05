@@ -7,9 +7,9 @@ from app.game.data.Declaration import Declaration
 class TurnDelegate(abc.ABC):
 
     @abc.abstractmethod
-    def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
+    async def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
         pass
 
     @abc.abstractmethod
-    def broadcast_declaration(self, player: str, declaration: Declaration, cards: tuple):
+    async def broadcast_declaration(self, player: str, declaration: Declaration, cards: tuple):
         pass

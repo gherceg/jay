@@ -1,3 +1,5 @@
+import asyncio
+
 from app.game.data.Turn import Turn
 from app.game.data.Declaration import Declaration
 from app.game.data.CardSet import CardSet
@@ -27,16 +29,15 @@ class Game(QuestionDelegate, TurnDelegate):
         for team in teams:
             self.teams[team[NAME]] = team[PLAYERS_KEY]
 
-    def handle_question(self, questioner: str, respondent: str, card: str):
+    async def handle_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
+        self.up_next = questioner if outcome else respondent
         turn = Turn(questioner, respondent, card, outcome)
         self.ledger.append(turn)
         for key, player in self.players.items():
-            player.received_next_turn(turn)
+            await player.received_next_turn(turn)
 
-    def handle_declaration(self, player: str, card_set: CardSet, declared_map: dict):
-        # convert string card set to enum
-
+    async def handle_declaration(self, player: str, card_set: CardSet, declared_map: dict):
         outcome = True
         for (card, player) in declared_map.items():
             outcome = self.does_player_have_card(player, card) and outcome
@@ -44,9 +45,9 @@ class Game(QuestionDelegate, TurnDelegate):
         declaration = Declaration(player, card_set, declared_map, outcome)
         self.ledger.append(declaration)
         for key, player in self.players.items():
-            player.received_declaration(declaration)
+            await player.received_declaration(declaration)
 
-    def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
+    async def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
         """Package update to send to client"""
         contents = {}
         contents[MESSAGE_TYPE] = GAME_UPDATE
@@ -55,9 +56,9 @@ class Game(QuestionDelegate, TurnDelegate):
         contents[NEXT_TURN] = self.up_next
         contents[TEAMS_KEY] = self.build_teams_package()
 
-        self.network_delegate.broadcast_message(player, contents)
+        await self.network_delegate.broadcast_message(player, contents)
 
-    def broadcast_declaration(self, player: str, declaration: Declaration, cards: tuple):
+    async def broadcast_declaration(self, player: str, declaration: Declaration, cards: tuple):
         """Package update to send to client"""
         contents = {}
         contents[MESSAGE_TYPE] = GAME_UPDATE
@@ -66,7 +67,7 @@ class Game(QuestionDelegate, TurnDelegate):
         contents[NEXT_TURN] = self.up_next
         contents[TEAMS_KEY] = self.build_teams_package()
 
-        self.network_delegate.broadcast_message(player, contents)
+        await self.network_delegate.broadcast_message(player, contents)
 
     def get_player_names(self):
         return list(self.players.keys())
