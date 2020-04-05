@@ -119,6 +119,7 @@ class Server(NetworkDelegate):
                 MESSAGE_TYPE: SELECTED_PLAYER,
                 DATA: {
                     IDENTIFIER: client_id,
+                    NAME: data[NAME],
                     CARDS: self.game.players[data[NAME]].get_cards(),
                 }
             }
