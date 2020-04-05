@@ -1,6 +1,6 @@
 import logging
 import json
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocket
 from typing import Dict
 import asyncio
 
@@ -10,7 +10,6 @@ from app.game.Game import Game
 from app.Constants import *
 from app.util.UtilMethods import *
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -181,10 +180,9 @@ class Server(NetworkDelegate):
         # to keep another list of user names to unique client ids. These
         # client IDs will need to be different than the websocket IDs, I think.
         # TODO: come back to figure out how to register clients
-        logger.info('Client keys: {0}'.format(self.clients.keys()))
+        logger.debug('Client keys: {0}'.format(self.clients.keys()))
         if name in self.clients.keys():
             websocket = self.clients[name]
             await websocket.send_json(contents)
         else:
-            logger.error('Could not find {0} in client dict'.format(name))
-
+            logger.warning('Could not find {0} in client dict'.format(name))

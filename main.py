@@ -8,7 +8,7 @@ app = FastAPI()
 
 server = Server()
 
-logging.basicConfig(level=logging.INFO)
+logging.root.setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -24,8 +24,5 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_json()
             await server.handle_message(websocket, data)
-            # if message:
-            #     logger.info(message)
-            #     await websocket.send_json(message)
     except WebSocketDisconnect:
         server.remove(websocket)

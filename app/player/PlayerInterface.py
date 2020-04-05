@@ -2,7 +2,6 @@ import logging
 
 from app.player.StateMethods import *
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
