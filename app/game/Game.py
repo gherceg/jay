@@ -1,4 +1,4 @@
-import asyncio
+from typing import Dict
 
 from app.game.data.Turn import Turn
 from app.game.data.Declaration import Declaration
@@ -6,7 +6,9 @@ from app.game.data.CardSet import CardSet
 from app.player.QuestionDelegate import QuestionDelegate
 from app.player.TurnDelegate import TurnDelegate
 from app.network.NetworkDelegate import NetworkDelegate
+from app.player.PlayerInterface import PlayerInterface
 from app.Constants import *
+from app.util.Optional import *
 
 
 class Game(QuestionDelegate, TurnDelegate):
@@ -49,13 +51,7 @@ class Game(QuestionDelegate, TurnDelegate):
 
     async def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
         """Package update to send to client"""
-        contents = {}
-        contents[MESSAGE_TYPE] = GAME_UPDATE
-        contents[LAST_TURN] = turn.to_dict()
-        contents[CARDS] = cards
-        contents[NEXT_TURN] = self.up_next
-        contents[TEAMS_KEY] = self.build_teams_package()
-
+        contents = game_update(self, self.players[player], Optional(turn))
         await self.network_delegate.broadcast_message(player, contents)
 
     async def broadcast_declaration(self, player: str, declaration: Declaration, cards: tuple):
@@ -75,9 +71,16 @@ class Game(QuestionDelegate, TurnDelegate):
     def get_teams_json(self) -> list:
         team_json = []
         for team_name, players in self.teams.items():
-            team_entry = {NAME: team_name, PLAYERS_KEY: players}
-            team_json.append(team_entry)
+            team_players = []
+            for player in players:
+                player_data = {
+                    NAME: player,
+                    CARD_COUNT: len(self.players[player].get_cards())
+                }
+                team_players.append(player_data)
 
+            team_entry = {NAME: team_name, PLAYERS_KEY: team_players}
+            team_json.append(team_entry)
         return team_json
 
     # PRIVATE METHODS
@@ -99,3 +102,24 @@ class Game(QuestionDelegate, TurnDelegate):
                 team_players.append(player_dict)
             teams_dict[name] = team_players
         return teams_dict
+
+
+def game_update(game: Game, player: PlayerInterface,
+                opt_turn: Optional[Turn] = Optional.empty()) -> Dict:
+    contents = {
+        MESSAGE_TYPE: GAME_UPDATE,
+        DATA: {
+            CARDS: player.get_cards(),
+            NEXT_TURN: game.up_next,
+            TEAMS_KEY: game.get_teams_json()
+        }
+    }
+
+    if opt_turn.is_present():
+        turn = opt_turn.get()
+        contents[DATA][LAST_TURN] = {
+            TYPE: TURN,
+            DATA: turn.to_dict()
+        }
+
+    return contents

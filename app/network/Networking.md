@@ -75,44 +75,49 @@ Card Sets are defined as follows:
     { 'type': 'joined_game',
       'data': { 
             'teams': [
-                {'name':name of team, 'players':list of player names},
+                {'name':name of team, 
+                'players': [{
+                    'name': name of player,
+                    'card_count': number of cards,
+                }],
+                }
             ]
-            'next_turn': name of player who is up
        }
     }
-     
-###Selected Player
-      { 'type': 'selected_player',
-      'data': { 
-            'identifier': identifier provided by server,
-            'cards': if virtual deck was specified, list of cards 
-       }
-    }     
-     
+          
 ###Game Update
-    { 'message_type':'game_update'
-    'data': {
-        'teams': {
-            'players': [
-                'name': name,
-                'card_count': card count,
-                'status': game connection status 
-            ],
-            'sets': count of sets won
-            },
+    { 'message_type':'game_update',
+      'data': {
+        'teams': [
+                {'name':name of team, 
+                'players': [{
+                    'name': name of player,
+                    'card_count': number of cards,
+                }],
+                'set_count': number of sets
+                }
+            ]
         'last_turn': {
-            'turn_type': question or declaration
-            'outcome': outcome
-            IF Question:
-            'questioner': player name,
-            'respondent': player name,
-            'card': card 
-            IF Declaration:
-            'player': player,
-            'card_set' card set
-            },
-        'current_turn': player name,
-        'cards': [] list of cards,
-        'state': data frame
+            'type': question,
+            'data': {
+               'outcome': outcome,
+               'questioner': player name,
+               'respondent': player name,
+               'card': card 
+            }
+            OR
+            'type': declaration,
+            'data': {
+                'outcome': outcome,
+                'player': player,
+                'card_set' card set,
+            }
+        },
+        'next_turn': player name,
+        'player': {
+                'identifier': identifier provided by server,
+                'name': name of player,
+                'cards': list of cards,
+            }
         }
-
+        

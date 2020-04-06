@@ -7,6 +7,8 @@ import asyncio
 from app.network.NetworkDelegate import NetworkDelegate
 from app.game.GameFactory import GameFactory
 from app.game.Game import Game
+from app.player.PlayerInterface import PlayerInterface
+from app.game.data.Turn import Turn
 from app.Constants import *
 from app.util.UtilMethods import *
 
@@ -95,8 +97,7 @@ class Server(NetworkDelegate):
                 data_to_send = {
                     MESSAGE_TYPE: JOINED_GAME,
                     DATA: {
-                        TEAMS_KEY: self.game.get_teams_json(),
-                        NEXT_TURN: self.game.up_next
+                        TEAMS_KEY: self.game.get_teams_json()
                     }
                 }
                 await self.send_message(websocket, data_to_send)
@@ -109,20 +110,15 @@ class Server(NetworkDelegate):
         # check to make sure the expected fields exist
         if NAME in data:
             client_id = self.register_new_client(data[NAME], websocket)
+            player = self.game.players[data[NAME]]
             if self.game.virtual_deck is False:
                 if CARDS in data:
-                    self.game.players[data[NAME]].set_initial_cards(data[CARDS])
+                    player.set_initial_cards(data[CARDS])
                 else:
                     await self.send_error(websocket, 'Select Player Request: Missing cards field')
 
-            data_to_send = {
-                MESSAGE_TYPE: SELECTED_PLAYER,
-                DATA: {
-                    IDENTIFIER: client_id,
-                    NAME: data[NAME],
-                    CARDS: self.game.players[data[NAME]].get_cards(),
-                }
-            }
+            data_to_send = self.game_update(self.game, player)
+
             await self.send_message(websocket, data_to_send)
         else:
             await self.send_error('Select Player Request: Missing name field')
@@ -173,12 +169,30 @@ class Server(NetworkDelegate):
 
         return Optional.empty()
 
+    @staticmethod
+    def game_update(game: Game, player: PlayerInterface,
+                    opt_turn: Optional[Turn] = Optional.empty()) -> Dict:
+        contents = {
+            MESSAGE_TYPE: GAME_UPDATE,
+            DATA: {
+                CARDS: player.get_cards(),
+                NEXT_TURN: game.up_next,
+                TEAMS_KEY: game.get_teams_json()
+            }
+        }
+
+        if opt_turn.is_present():
+            turn = opt_turn.get()
+            contents[DATA][LAST_TURN] = {
+                TYPE: TURN,
+                DATA: turn.to_dict()
+            }
+
+        return contents
+
     # Network Delegate Implementation
+    #TODO: should only be responsible for linking the player with the correct websocket, then passing on info provided to client
     async def broadcast_message(self, name: str, contents: Dict):
-        # message = self.parse(contents)
-        # QS: maybe change from client_id to user name? Where do we want
-        # to keep another list of user names to unique client ids. These
-        # client IDs will need to be different than the websocket IDs, I think.
         # TODO: come back to figure out how to register clients
         logger.debug('Client keys: {0}'.format(self.clients.keys()))
         if name in self.clients.keys():

@@ -40,6 +40,8 @@ GAME_UPDATE = "game_update"
 ERROR = "error"
 DESCRIPTION = "description"
 TURN_TYPE = "turn_type"
+TYPE = "type"
+TURN = "turn"
 LAST_TURN = "last_turn"
 
 # card_set values

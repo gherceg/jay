@@ -1,14 +1,20 @@
 from fastapi import FastAPI
 from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 import logging
 
 from app.network.Server import Server
 
-app = FastAPI()
+middleware = [
+    Middleware(CORSMiddleware, allow_origins=['*'])
+]
+
+app = FastAPI(middleware=middleware)
 
 server = Server()
 
-logging.root.setLevel(logging.DEBUG)
+logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 
