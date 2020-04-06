@@ -1,8 +1,9 @@
 from fastapi.testclient import TestClient
 
 from main import app
-from app.test.TestVariables import *
-from app.Constants import *
+from app.test.TestVariables import TestVariables
+
+from app.constants import *
 
 client = TestClient(app)
 client_two = TestClient(app)

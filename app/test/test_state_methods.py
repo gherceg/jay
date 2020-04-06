@@ -1,27 +1,29 @@
-from app.player.StateMethods import StateMethods
+from pandas import Series, DataFrame
+
+import app.player.state_methods as state_methods
 from app.game.data.CardStatus import CardStatus
-from app.util.DataFrameMethods import *
-from app.util.UtilMethods import *
+from app.game.data.CardSet import CardSet
+import app.util.util_methods as util_methods
 
 
 # Tests for create_default_state() method
 
 
 def test_default_state_row_count():
-    players = ["a", "b", "c"]
+    players = ("a", "b", "c")
     expected_row_count = 0
     for card_set in CardSet:
         expected_row_count += len(card_set.value)
-    state: DataFrame = StateMethods.create_default_state(players)
+    state: DataFrame = state_methods.create_default_state(players)
     actual_row_count = len(state)
     assert expected_row_count == actual_row_count
 
 
 def test_default_state_column_count():
-    players = ["a", "b", "c"]
+    players = ("a", "b", "c")
     expected_column_count = len(players)
 
-    state: DataFrame = StateMethods.create_default_state(players)
+    state: DataFrame = state_methods.create_default_state(players)
     actual_column_count = len(state.columns)
     assert expected_column_count == actual_column_count
 
@@ -29,7 +31,7 @@ def test_default_state_column_count():
 def test_default_state_values():
     players = ("a", "b", "c")
 
-    state: DataFrame = StateMethods.create_default_state(players)
+    state: DataFrame = state_methods.create_default_state(players)
     series_a: Series = state["a"].value_counts()
     series_b: Series = state["b"].value_counts()
     series_c: Series = state["c"].value_counts()
@@ -46,9 +48,9 @@ def test_default_state_values():
 def test_update_state_for_cards():
     players = ('a', 'b', 'c')
     cards = ('2s', '4c', '9h', 'ad')
-    state: DataFrame = StateMethods.create_default_state(players)
-    state = StateMethods.update_state_upon_receiving_cards(state, 'a', cards)
-    for card in deck_of_cards():
+    state: DataFrame = state_methods.create_default_state(players)
+    state = state_methods.update_state_upon_receiving_cards(state, 'a', cards)
+    for card in util_methods.deck_of_cards():
         if card in cards:
             assert state.loc[card, 'a'] == CardStatus.DOES_HAVE
         else:

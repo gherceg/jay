@@ -7,8 +7,11 @@ from app.player.QuestionDelegate import QuestionDelegate
 from app.player.TurnDelegate import TurnDelegate
 from app.network.NetworkDelegate import NetworkDelegate
 from app.player.PlayerInterface import PlayerInterface
-from app.Constants import *
-from app.util.Optional import *
+from app.constants import *
+from app.util.Optional import Optional
+
+
+# TODO import game_messages without ciruclar reference, or move methods into Game class def
 
 
 class Game(QuestionDelegate, TurnDelegate):
@@ -29,7 +32,7 @@ class Game(QuestionDelegate, TurnDelegate):
 
         self.teams = {}
         for team in teams:
-            self.teams[team[NAME]] = team[PLAYERS_KEY]
+            self.teams[team[NAME]] = team[PLAYERS]
 
     async def handle_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
@@ -79,7 +82,7 @@ class Game(QuestionDelegate, TurnDelegate):
                 }
                 team_players.append(player_data)
 
-            team_entry = {NAME: team_name, PLAYERS_KEY: team_players}
+            team_entry = {NAME: team_name, PLAYERS: team_players}
             team_json.append(team_entry)
         return team_json
 
@@ -104,6 +107,7 @@ class Game(QuestionDelegate, TurnDelegate):
         return teams_dict
 
 
+# TODO remove once using game_messages
 def game_update(game: Game, player: PlayerInterface,
                 opt_turn: Optional[Turn] = Optional.empty()) -> Dict:
     contents = {
@@ -111,7 +115,7 @@ def game_update(game: Game, player: PlayerInterface,
         DATA: {
             CARDS: player.get_cards(),
             NEXT_TURN: game.up_next,
-            TEAMS_KEY: game.get_teams_json()
+            TEAMS_KEY: formatted_teams(game)
         }
     }
 
@@ -123,3 +127,20 @@ def game_update(game: Game, player: PlayerInterface,
         }
 
     return contents
+
+
+# TODO remove once using game_messages
+def formatted_teams(game: Game) -> list:
+    team_json = []
+    for team_name, players in game.teams.items():
+        team_players = []
+        for player in players:
+            player_data = {
+                NAME: player,
+                CARD_COUNT: len(game.players[player].get_cards())
+            }
+            team_players.append(player_data)
+
+        team_entry = {NAME: team_name, PLAYERS: team_players}
+        team_json.append(team_entry)
+    return team_json

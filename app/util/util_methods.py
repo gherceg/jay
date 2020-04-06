@@ -1,8 +1,8 @@
 import random
 
 from app.game.data.CardSet import CardSet
-from app.Constants import *
-from app.util.Optional import *
+from app.constants import *
+from app.util.Optional import Optional
 
 
 def set_for_card(card) -> CardSet:

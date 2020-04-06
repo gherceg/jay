@@ -9,8 +9,8 @@ QUESTIONER = "questioner"
 RESPONDENT = "respondent"
 CARD = "card"
 CARDS = "cards"
-PLAYER_KEY = "player"
-PLAYERS_KEY = "players"
+PLAYER = "player"
+PLAYERS = "players"
 TEAMS_KEY = "teams"
 CARD_SET = "card_set"
 DECLARED_MAP = "declared_map"
@@ -21,16 +21,11 @@ CARD_COUNT = "card_count"
 NEXT_TURN = "next_turn"
 
 # Client Message Types
-HANDSHAKE = "handshake"
-
 CREATE_GAME = "create_game"
 ENTER_PIN = "enter_pin"
 SELECT_PLAYER = "select_player"
 QUESTION = "question"
 DECLARATION = "declaration"
-
-
-NEW_TURN_KEY = "new_turn"
 
 # Server Message Types
 CREATED_GAME = "created_game"
