@@ -43,6 +43,10 @@ class Game(QuestionDelegate, TurnDelegate):
         for (card, player) in declared_map.items():
             outcome = self.does_player_have_card(player, card) and outcome
 
+        #TODO not the most elegant way to do this
+        team_name = self.get_team_for_player(player) if outcome else self.get_opposing_team_for_player(player)
+        self.set_counts[team_name] += 1
+
         declaration = Declaration(player, card_set, declared_map, outcome)
         self.ledger.append(declaration)
         for key, player in self.players.items():
@@ -59,6 +63,18 @@ class Game(QuestionDelegate, TurnDelegate):
 
     def get_player_names(self):
         return list(self.players.keys())
+
+    def get_team_for_player(self, player: str) -> str:
+        for (team_name, players) in self.teams.items():
+            if player in players:
+                return team_name
+
+        raise Exception('Could not find team for player {0}'.format(player))
+
+    def get_opposing_team_for_player(self, player: str) -> str:
+        for (team_name, players) in self.teams.items():
+            if player not in players:
+                return team_name
 
     # PRIVATE METHODS
 

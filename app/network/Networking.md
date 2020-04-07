@@ -44,7 +44,6 @@ Card Sets are defined as follows:
 ###Question
     { 'type': 'question',
       'data': {
-        'identifier': identifier provided by server,
         'questioner': name of player asking question,
         'respondent': name of player being asked a question,
         'card': card in question
@@ -54,7 +53,6 @@ Card Sets are defined as follows:
 ###Declaration
     { 'type': 'declaration',
       'data': {
-        'identifier': identifier provided by server,
         'name': name of player,
         'card_set': set being declared
         'declared_map': [
@@ -80,6 +78,7 @@ Card Sets are defined as follows:
                     'name': name of player,
                     'card_count': number of cards,
                 }],
+                'set_count': number of sets
                 }
             ]
        }
@@ -115,9 +114,7 @@ Card Sets are defined as follows:
         },
         'next_turn': player name,
         'player': {
-                'identifier': identifier provided by server,
                 'name': name of player,
                 'cards': list of cards,
             }
         }
-        
