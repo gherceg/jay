@@ -1,7 +1,10 @@
+import logging
 from pandas import DataFrame
 
 from app.game.data import Turn, Declaration, CardStatus, CardSet
 from app.util import util_methods, data_frame_methods
+
+logger = logging.getLogger(__name__)
 
 
 def create_default_state(players: tuple) -> DataFrame:

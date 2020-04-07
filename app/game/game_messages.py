@@ -1,10 +1,13 @@
 from typing import Dict
+import logging
 
 from app.constants import *
 from app.game import Game
 from app.player import PlayerInterface
 from app.game.data import Turn, Declaration
 from app.util import Optional
+
+logger = logging.getLogger(__name__)
 
 
 def created_game(game: Game) -> Dict:
@@ -56,7 +59,7 @@ def game_update_for_declaration(game: Game, player: PlayerInterface, declaration
             PLAYER: {
                 NAME: player.name,
                 CARDS: player.get_cards()
-            },            NEXT_TURN: game.up_next,
+            }, NEXT_TURN: game.up_next,
             TEAMS_KEY: formatted_teams(game),
             LAST_TURN: {
                 TYPE: DECLARATION,
@@ -75,7 +78,7 @@ def formatted_teams(game: Game) -> list:
         for player in players:
             player_data = {
                 NAME: player,
-                CARD_COUNT: len(game.players[player].get_cards())
+                CARD_COUNT: game.get_player_card_count(player)
             }
             team_players.append(player_data)
 
