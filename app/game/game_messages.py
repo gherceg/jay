@@ -1,10 +1,10 @@
 from typing import Dict
 
 from app.constants import *
-from app.game.Game import Game
-from app.player.PlayerInterface import PlayerInterface
-from app.game.data.Turn import Turn
-from app.util.Optional import Optional
+from app.game import Game
+from app.player import PlayerInterface
+from app.game.data import Turn, Declaration
+from app.util import Optional
 
 
 def created_game(game: Game) -> Dict:
@@ -42,6 +42,23 @@ def game_update(game: Game, player: PlayerInterface,
             TYPE: TURN,
             DATA: turn.to_dict()
         }
+
+    return contents
+
+
+def game_update_for_declaration(game: Game, player: PlayerInterface, declaration: Declaration) -> Dict:
+    contents = {
+        MESSAGE_TYPE: GAME_UPDATE,
+        DATA: {
+            CARDS: player.get_cards(),
+            NEXT_TURN: game.up_next,
+            TEAMS_KEY: formatted_teams(game),
+            LAST_TURN: {
+                TYPE: DECLARATION,
+                DATA: declaration.to_dict()
+            }
+        }
+    }
 
     return contents
 

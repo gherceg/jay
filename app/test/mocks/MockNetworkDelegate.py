@@ -1,4 +1,4 @@
-from app.network.NetworkDelegate import NetworkDelegate
+from app.network import NetworkDelegate
 
 
 class MockNetworkDelegate(NetworkDelegate):

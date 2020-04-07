@@ -1,4 +1,4 @@
-from app.player.QuestionDelegate import QuestionDelegate
+from app.player import QuestionDelegate
 
 
 class MockQuestionDelegate(QuestionDelegate):

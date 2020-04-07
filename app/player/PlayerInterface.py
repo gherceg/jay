@@ -1,9 +1,8 @@
 import logging
 from pandas import DataFrame
 
-import app.player.state_methods as state_methods
-from app.game.data.Turn import Turn
-from app.game.data.Declaration import Declaration
+from app.player import state_methods
+from app.game.data import Turn, Declaration
 
 logger = logging.getLogger(__name__)
 

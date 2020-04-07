@@ -4,7 +4,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
 
-from app.network.Server import Server
+from app.network import Server
 
 middleware = [
     Middleware(CORSMiddleware, allow_origins=['*'])

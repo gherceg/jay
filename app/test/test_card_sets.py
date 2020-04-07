@@ -1,4 +1,4 @@
-from app.game.data.CardSet import CardSet
+from app.game.data import CardSet
 
 
 def test_low_spades():

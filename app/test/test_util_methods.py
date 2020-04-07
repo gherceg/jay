@@ -1,5 +1,5 @@
-import app.util.util_methods as util_methods
-from app.game.data.CardSet import CardSet
+from app.util import util_methods
+from app.game.data import CardSet
 
 
 # Tests for set_for_card(card) util method

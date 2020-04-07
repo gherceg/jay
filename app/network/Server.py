@@ -1,15 +1,13 @@
 import logging
 import json
 import asyncio
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketDisconnect
 from typing import Dict
 
-import app.game.game_builder as gb
-import app.game.game_messages as messages
-import app.util.util_methods as util
+from app.game import game_messages, game_builder
+from app.util import util_methods
 from app.constants import *
-from app.network.network_methods import send_error, send_message
-from app.network.NetworkDelegate import NetworkDelegate
+from app.network import NetworkDelegate, network_methods
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +31,13 @@ class Server(NetworkDelegate):
 
     async def handle_message(self, websocket: WebSocket, message: dict):
 
-        logger.debug('Received message from client: {0}'.format(message))
+        logger.info('Received message from client: {0}'.format(message))
 
         if MESSAGE_TYPE not in message:
-            await send_error(websocket, 'Cannot parse message: Missing message_type field')
+            await network_methods.send_error(websocket, 'Cannot parse message: Missing message_type field')
 
         if DATA not in message:
-            await send_error(websocket, 'Cannot parse message: Missing data field')
+            await network_methods.send_error(websocket, 'Cannot parse message: Missing data field')
 
         data = message[DATA]
 
@@ -57,35 +55,35 @@ class Server(NetworkDelegate):
                 await self.handle_question(websocket, data)
             else:
                 logger.error('Server.py: QUESTION missing client id. Closing connection.')
-                await websocket.close()
+                raise WebSocketDisconnect
 
         elif message[MESSAGE_TYPE] == DECLARATION:
             if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys():
                 await self.handle_declaration(websocket, data)
             else:
                 logger.error('Server.py: DECLARATION missing client id. Closing connection.')
-                await websocket.close()
+                raise WebSocketDisconnect
 
     async def handle_create_game_request(self, websocket: WebSocket, data: dict):
         if self.game:
             logger.info('Deleting Existing Game')
             self.game = None
 
-        self.game = gb.create_game(self, data)
+        self.game = game_builder.create_game(self, data)
 
         logger.info('Create Game Request: created new game with pin {0}'.format(self.game.pin))
-        data_to_send = messages.created_game(self.game)
-        await send_message(websocket, data_to_send)
+        data_to_send = game_messages.created_game(self.game)
+        await network_methods.send_message(websocket, data_to_send)
 
     async def handle_enter_pin_request(self, websocket: WebSocket, data: dict):
         if PIN in data:
             if self.game and data[PIN] == self.game.pin:
-                data_to_send = messages.joined_game(self.game)
-                await send_message(websocket, data_to_send)
+                data_to_send = game_messages.joined_game(self.game)
+                await network_methods.send_message(websocket, data_to_send)
             else:
-                await send_error(websocket, 'Enter Pin Request: Invalid pin')
+                await network_methods.send_error(websocket, 'Enter Pin Request: Invalid pin')
         else:
-            await send_error(websocket, 'Enter Pin Request: Missing pin field')
+            await network_methods.send_error(websocket, 'Enter Pin Request: Missing pin field')
 
     async def handle_select_player_request(self, websocket: WebSocket, data: dict):
         # check to make sure the expected fields exist
@@ -96,28 +94,28 @@ class Server(NetworkDelegate):
                 if CARDS in data:
                     player.set_initial_cards(data[CARDS])
                 else:
-                    await send_error(websocket, 'Select Player Request: Missing cards field')
+                    await network_methods.send_error(websocket, 'Select Player Request: Missing cards field')
 
-            data_to_send = messages.game_update(self.game, player)
+            data_to_send = game_messages.game_update(self.game, player)
 
-            await send_message(websocket, data_to_send)
+            await network_methods.send_message(websocket, data_to_send)
         else:
-            await send_error('Select Player Request: Missing name field')
+            await network_methods.send_error('Select Player Request: Missing name field')
 
     async def handle_question(self, websocket: WebSocket, data: dict):
         logger.info('Received question')
         if QUESTIONER in data and RESPONDENT in data and CARD in data:
             await self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
         else:
-            await send_error(websocket, 'Question Request: Missing questioner, respondent or card field')
+            await network_methods.send_error(websocket, 'Question Request: Missing questioner, respondent or card field')
 
     async def handle_declaration(self, websocket: WebSocket, data: dict):
         logger.info('Received declaration')
-        card_set = util.card_set_for_key(data[CARD_SET])
+        card_set = util_methods.card_set_for_key(data[CARD_SET])
         if PLAYER in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
             self.game.handle_declaration(data[PLAYER], data[CARD_SET], data[DECLARED_MAP])
         else:
-            await send_error(websocket, 'Declaration Request: Missing player, card_set or declared_map field')
+            await network_methods.send_error(websocket, 'Declaration Request: Missing player, card_set or declared_map field')
 
     def register_new_client(self, identifier: str, websocket: WebSocket) -> str:
         logger.info('Registering new client with id: {0}'.format(identifier))

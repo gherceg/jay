@@ -1,4 +1,4 @@
-from app.util.Optional import Optional
+from app.util import Optional
 
 
 # Tests for Optional.empty()

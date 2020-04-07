@@ -1,19 +1,15 @@
 from pandas import DataFrame
 
-from app.game.data.CardStatus import CardStatus
-from app.game.data.Turn import Turn
-from app.game.data.Declaration import Declaration
-from app.game.data.CardSet import CardSet
-from app.util.util_methods import set_for_card, deck_of_cards
-import app.util.data_frame_methods as helper
+from app.game.data import Turn, Declaration, CardStatus, CardSet
+from app.util import util_methods, data_frame_methods
 
 
 def create_default_state(players: tuple) -> DataFrame:
     """Creates and returns a DataFrame object that contains a column for each player and a row for each card
         Each cell is set to the CardStatus UNKNOWN
     """
-    cards = deck_of_cards()
-    return helper.create_state_with_value(cards, players, CardStatus.UNKNOWN)
+    cards = util_methods.deck_of_cards()
+    return data_frame_methods.create_state_with_value(cards, players, CardStatus.UNKNOWN)
 
 
 def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: tuple):
@@ -39,7 +35,7 @@ def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: tupl
 
 
 def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
-    card_set: CardSet = set_for_card(turn.card)
+    card_set: CardSet = util_methods.set_for_card(turn.card)
 
     if turn.outcome:
         # we know which player has the card so the rest do not
@@ -51,7 +47,7 @@ def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
         state.loc[turn.card, turn.respondent] = CardStatus.DOES_NOT_HAVE
 
     # update any unknown statuses to might have for the player asking the question
-    state = helper.update_rows_with_old_to_new_for_column(state,
+    state = data_frame_methods.update_rows_with_old_to_new_for_column(state,
                                                           card_set.value,
                                                           turn.questioner,
                                                           CardStatus.UNKNOWN,

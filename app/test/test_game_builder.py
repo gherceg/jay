@@ -1,4 +1,4 @@
-import app.game.game_builder as gb
+from app.game import game_builder
 from app.test.mocks.MockNetworkDelegate import MockNetworkDelegate
 
 mock_network_delegate = MockNetworkDelegate()
@@ -6,20 +6,20 @@ mock_network_delegate = MockNetworkDelegate()
 
 def test_game_factory_create():
     settings = mock_game_settings(True, True)
-    game = gb.create_game(mock_network_delegate, settings)
+    game = game_builder.create_game(mock_network_delegate, settings)
     assert len(game.players) == 6
 
 
 def test_game_factory_create_no_cards():
     settings = mock_game_settings(False, True)
-    game = gb.create_game(mock_network_delegate, settings)
+    game = game_builder.create_game(mock_network_delegate, settings)
     for (key, player) in game.players.items():
         assert not player.get_cards()
 
 
 def test_game_factory_setup_teams_specified():
     settings = mock_game_settings(True, True)
-    teams = gb.setup_teams(settings)
+    teams = game_builder.setup_teams(settings)
     assert len(teams) == 2
     assert teams[0]["name"] == "test_team_one"
     assert teams[1]["name"] == "test_team_two"
@@ -31,7 +31,7 @@ def test_game_factory_setup_teams_specified():
 
 def test_game_factory_setup_teams_unspecified():
     settings = mock_game_settings(True, False)
-    teams = gb.setup_teams(settings)
+    teams = game_builder.setup_teams(settings)
 
     assert len(teams) == 2
     assert teams[0]["name"] == "Team 1"

@@ -1,7 +1,7 @@
 from app.player.PlayerInterface import PlayerInterface
 from app.player.TurnDelegate import TurnDelegate
-from app.game.data.Turn import Turn
-from app.game.data.Declaration import Declaration
+from app.game.data import Turn
+from app.game.data import Declaration
 
 
 class NetworkPlayer(PlayerInterface):

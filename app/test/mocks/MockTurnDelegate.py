@@ -1,6 +1,5 @@
-from app.player.TurnDelegate import TurnDelegate
-from app.game.data.Turn import Turn
-from app.game.data.Declaration import Declaration
+from app.player import TurnDelegate
+from app.game.data import Turn, Declaration
 
 
 class MockTurnDelegate(TurnDelegate):

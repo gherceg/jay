@@ -1,5 +1,5 @@
-from app.player.NetworkPlayer import NetworkPlayer
-import app.player.state_methods as state_methods
+from app.player import NetworkPlayer
+from app.player import state_methods
 
 
 def test_get_cards():

@@ -1,9 +1,8 @@
 from pandas import Series, DataFrame
 
-import app.player.state_methods as state_methods
-from app.game.data.CardStatus import CardStatus
-from app.game.data.CardSet import CardSet
-import app.util.util_methods as util_methods
+from app.player import state_methods
+from app.util import util_methods
+from app.game.data import CardStatus, CardSet
 
 
 # Tests for create_default_state() method

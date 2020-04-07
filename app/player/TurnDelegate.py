@@ -1,7 +1,6 @@
 import abc
 
-from app.game.data.Turn import Turn
-from app.game.data.Declaration import Declaration
+from app.game.data import Turn, Declaration
 
 
 class TurnDelegate(abc.ABC):

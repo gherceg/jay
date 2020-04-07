@@ -1,11 +1,10 @@
 import copy
 import random
 
-from app.game.Game import Game
-from app.player.NetworkPlayer import NetworkPlayer
-from app.player.ComputerPlayer import ComputerPlayer
-from app.network.NetworkDelegate import NetworkDelegate
-from app.util.util_methods import distribute_cards
+from app.game import Game
+from app.player import NetworkPlayer, ComputerPlayer
+from app.network import NetworkDelegate
+from app.util import util_methods
 from app.constants import *
 
 
@@ -19,7 +18,7 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
 
     # if virtual deck has been specified, distribute cards now
     if settings[VIRTUAL_DECK]:
-        cards = distribute_cards(len(players))
+        cards = util_methods.distribute_cards(len(players))
         for player, hand in zip(players, cards):
             player.set_initial_cards(hand)
 

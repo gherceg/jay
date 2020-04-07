@@ -1,7 +1,5 @@
-from app.player.PlayerInterface import PlayerInterface
-from app.player.QuestionDelegate import QuestionDelegate
-from app.game.data.Turn import Turn
-from app.game.data.Declaration import Declaration
+from app.player import PlayerInterface, QuestionDelegate
+from app.game.data import Turn, Declaration
 
 
 class ComputerPlayer(PlayerInterface):
