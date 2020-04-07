@@ -26,6 +26,10 @@ class Game(QuestionDelegate, TurnDelegate):
         for team in teams:
             self.teams[team[NAME]] = team[PLAYERS]
 
+        self.set_counts = {}
+        for team in teams:
+            self.set_counts[team[NAME]] = 0
+
     async def handle_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
         self.up_next = questioner if outcome else respondent

@@ -2,7 +2,6 @@
 MESSAGE_TYPE = "type"
 PLAYER_TYPE = "type"
 DATA = "data"
-IDENTIFIER = "identifier"
 PIN = "pin"
 NAME = "name"
 QUESTIONER = "questioner"
@@ -18,6 +17,7 @@ VIRTUAL_DECK = "virtual_deck"
 NETWORK_PLAYER = "network"
 COMPUTER_PLAYER = "computer"
 CARD_COUNT = "card_count"
+SET_COUNT = "set_count"
 NEXT_TURN = "next_turn"
 
 # Client Message Types

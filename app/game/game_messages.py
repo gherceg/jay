@@ -30,7 +30,10 @@ def game_update(game: Game, player: PlayerInterface,
     contents = {
         MESSAGE_TYPE: GAME_UPDATE,
         DATA: {
-            CARDS: player.get_cards(),
+            PLAYER: {
+                NAME: player.name,
+                CARDS: player.get_cards()
+            },
             NEXT_TURN: game.up_next,
             TEAMS_KEY: formatted_teams(game)
         }
@@ -50,8 +53,10 @@ def game_update_for_declaration(game: Game, player: PlayerInterface, declaration
     contents = {
         MESSAGE_TYPE: GAME_UPDATE,
         DATA: {
-            CARDS: player.get_cards(),
-            NEXT_TURN: game.up_next,
+            PLAYER: {
+                NAME: player.name,
+                CARDS: player.get_cards()
+            },            NEXT_TURN: game.up_next,
             TEAMS_KEY: formatted_teams(game),
             LAST_TURN: {
                 TYPE: DECLARATION,
@@ -74,6 +79,6 @@ def formatted_teams(game: Game) -> list:
             }
             team_players.append(player_data)
 
-        team_entry = {NAME: team_name, PLAYERS: team_players}
+        team_entry = {NAME: team_name, PLAYERS: team_players, SET_COUNT: game.set_counts[team_name]}
         team_json.append(team_entry)
     return team_json

@@ -51,18 +51,10 @@ class Server(NetworkDelegate):
             await self.handle_select_player_request(websocket, data)
 
         elif message[MESSAGE_TYPE] == QUESTION:
-            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys():
-                await self.handle_question(websocket, data)
-            else:
-                logger.error('Server.py: QUESTION missing client id. Closing connection.')
-                raise WebSocketDisconnect
+            await self.handle_question(websocket, data)
 
         elif message[MESSAGE_TYPE] == DECLARATION:
-            if IDENTIFIER in data and data[IDENTIFIER] in self.clients.keys():
-                await self.handle_declaration(websocket, data)
-            else:
-                logger.error('Server.py: DECLARATION missing client id. Closing connection.')
-                raise WebSocketDisconnect
+            await self.handle_declaration(websocket, data)
 
     async def handle_create_game_request(self, websocket: WebSocket, data: dict):
         if self.game:
@@ -117,10 +109,10 @@ class Server(NetworkDelegate):
         else:
             await network_methods.send_error(websocket, 'Declaration Request: Missing player, card_set or declared_map field')
 
-    def register_new_client(self, identifier: str, websocket: WebSocket) -> str:
-        logger.info('Registering new client with id: {0}'.format(identifier))
-        self.clients[identifier] = websocket
-        return identifier
+    def register_new_client(self, player_name: str, websocket: WebSocket) -> str:
+        logger.info('Registering new client with id: {0}'.format(player_name))
+        self.clients[player_name] = websocket
+        return player_name
 
     # Network Delegate Implementation
     # TODO: should only be responsible for linking the player with the correct websocket, then passing on info provided to client

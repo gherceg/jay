@@ -38,20 +38,20 @@ def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
     card_set: CardSet = util_methods.set_for_card(turn.card)
 
     if turn.outcome:
-        # we know which player has the card so the rest do not
+        # the questioner has the card so the rest do not
         state.loc[turn.card, :] = CardStatus.DOES_NOT_HAVE
         state.loc[turn.card, turn.questioner] = CardStatus.DOES_HAVE
     else:
-        # we know that both players do not have the given card
+        # both players do not have the given card
         state.loc[turn.card, turn.questioner] = CardStatus.DOES_NOT_HAVE
         state.loc[turn.card, turn.respondent] = CardStatus.DOES_NOT_HAVE
 
     # update any unknown statuses to might have for the player asking the question
     state = data_frame_methods.update_rows_with_old_to_new_for_column(state,
-                                                          card_set.value,
-                                                          turn.questioner,
-                                                          CardStatus.UNKNOWN,
-                                                          CardStatus.MIGHT_HAVE)
+                                                                      card_set.value,
+                                                                      turn.questioner,
+                                                                      CardStatus.UNKNOWN,
+                                                                      CardStatus.MIGHT_HAVE)
     return state
 
 
