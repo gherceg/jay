@@ -3,6 +3,7 @@ from pandas import DataFrame
 
 from app.game.data import Turn, Declaration, CardStatus, CardSet
 from app.util import util_methods, data_frame_methods
+from app.constants import *
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +60,8 @@ def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
 
 
 def update_state_with_declaration(state: DataFrame, declaration: Declaration) -> DataFrame:
-    for card in declaration.declared_map.keys():
-        state.loc[card, :] = CardStatus.DECLARED
+    for player_card_pair in declaration.declared_map:
+        state.loc[player_card_pair[CARD], :] = CardStatus.DECLARED
 
     return state
 

@@ -18,6 +18,7 @@ class Server(NetworkDelegate):
     def __init__(self):
         self.connections: list = []
         self.clients: dict = {}
+        self.games: dict = {}
         self.game = None
 
     async def connect(self, websocket: WebSocket):
@@ -61,8 +62,9 @@ class Server(NetworkDelegate):
             logger.info('Deleting Existing Game')
             self.game = None
 
-        self.game = game_builder.create_game(self, data)
-
+        created_game = game_builder.create_game(self, data)
+        self.game = created_game
+        self.games[created_game.pin] = created_game
         logger.info('Create Game Request: created new game with pin {0}'.format(self.game.pin))
         data_to_send = game_messages.created_game(self.game)
         await network_methods.send_message(websocket, data_to_send)
@@ -104,8 +106,8 @@ class Server(NetworkDelegate):
     async def handle_declaration(self, websocket: WebSocket, data: dict):
         logger.info('Received declaration')
         card_set = util_methods.card_set_for_key(data[CARD_SET])
-        if PLAYER in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
-            self.game.handle_declaration(data[PLAYER], data[CARD_SET], data[DECLARED_MAP])
+        if NAME in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
+            await self.game.handle_declaration(data[NAME], data[CARD_SET], data[DECLARED_MAP])
         else:
             await network_methods.send_error(websocket, 'Declaration Request: Missing player, card_set or declared_map field')
 

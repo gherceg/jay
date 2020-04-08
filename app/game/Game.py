@@ -45,10 +45,10 @@ class Game(QuestionDelegate, TurnDelegate):
         for key, player in self.players.items():
             await player.received_next_turn(turn)
 
-    async def handle_declaration(self, player: str, card_set: CardSet, declared_map: dict):
+    async def handle_declaration(self, player: str, card_set: CardSet, declared_map: list):
         outcome = True
-        for (card, player) in declared_map.items():
-            outcome = self.does_player_have_card(player, card) and outcome
+        for card_player_pair in declared_map:
+            outcome = self.does_player_have_card(card_player_pair[PLAYER], card_player_pair[CARD]) and outcome
 
         # TODO not the most elegant way to do this
         team_name = self.get_team_for_player(player) if outcome else self.get_opposing_team_for_player(player)

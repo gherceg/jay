@@ -2,7 +2,7 @@ from app.game.data.CardSet import CardSet
 
 
 class Declaration:
-    def __init__(self, player: str, card_set: CardSet, declared_map: dict, outcome: bool):
+    def __init__(self, player: str, card_set: CardSet, declared_map: list, outcome: bool):
         self.player = player
         self.card_set = card_set
         self.declared_map = declared_map
