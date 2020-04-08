@@ -22,7 +22,8 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
         for player, hand in zip(players, cards):
             player.set_initial_cards(hand)
 
-    game = Game(network_delegate, players, teams, settings[VIRTUAL_DECK])
+    pin = random.randint(1000, 9999)
+    game = Game(pin, network_delegate, players, teams, settings[VIRTUAL_DECK])
 
     # now that the game has been created, set appropriate delegates on players
     for player in players:

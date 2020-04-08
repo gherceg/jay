@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 class Game(QuestionDelegate, TurnDelegate):
     """Responsible for managing a game and its players"""
 
-    def __init__(self, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
+    def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
         self.network_delegate = network_delegate
-        self.pin = 1234
+        self.pin = pin
         self.ledger = []
         self.up_next = None
         self.state = None
