@@ -2,7 +2,7 @@ import logging
 from pandas import DataFrame
 
 from app.game.data import Turn, Declaration, CardStatus, CardSet
-from app.util import util_methods, data_frame_methods
+from app.util import util_methods, data_frame_methods, Optional
 from app.constants import *
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,30 @@ def update_state_with_declaration(state: DataFrame, declaration: Declaration) ->
     return state
 
 
+# Read Methods
 def get_cards_for_player(state: DataFrame, player: str) -> tuple:
     card_rows = state.loc[:, player]
     cards = card_rows[card_rows == CardStatus.DOES_HAVE]
     return tuple(cards.keys())
+
+
+def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optional[tuple]:
+    declared_map = []
+    for card in card_set.value:
+        team_rows = state.loc[card, list(team)]
+        team_has_card = team_rows[team_rows == CardStatus.DOES_HAVE]
+        assert (len(team_has_card) <= 1)
+        if len(team_has_card) == 0:
+            return Optional.empty()
+        else:
+            pair = {CARD: card, PLAYER: team_has_card.keys()[0]}
+            declared_map.append(pair)
+
+    return Optional(tuple(declared_map))
+
+
+def get_eligible_question_pair(state: DataFrame, sets: tuple, opponents: tuple) -> (str, str):
+    # for card_set in sets:
+        # opponents_df = state.loc[list(card_set.value), list(opponents)]
+
+    return "test", "test"

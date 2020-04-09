@@ -1,7 +1,5 @@
-from app.player.PlayerInterface import PlayerInterface
-from app.player.TurnDelegate import TurnDelegate
-from app.game.data import Turn
-from app.game.data import Declaration
+from app.player import PlayerInterface, TurnDelegate
+from app.game.data import Turn, Declaration
 
 
 class NetworkPlayer(PlayerInterface):
@@ -18,6 +16,3 @@ class NetworkPlayer(PlayerInterface):
     async def received_declaration(self, declaration: Declaration):
         super().received_declaration(declaration)
         await self.delegate.broadcast_declaration(self.name, declaration, self.get_cards())
-
-
-

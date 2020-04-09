@@ -1,8 +1,15 @@
 from pandas import Series, DataFrame
+import logging
 
+# TODO: currently dependent on importing Server first, understand why order matters for your imports
+from app.network import Server
 from app.player import state_methods
 from app.util import util_methods
 from app.game.data import CardStatus, CardSet
+from app.constants import *
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 # Tests for create_default_state() method
@@ -54,3 +61,28 @@ def test_update_state_for_cards():
             assert state.loc[card, 'a'] == CardStatus.DOES_HAVE
         else:
             assert state.loc[card, 'a'] == CardStatus.DOES_NOT_HAVE
+
+
+def test_declaration_check():
+    players = ('a', 'b', 'c')
+    cards_for_a = ('2s', '4s')
+    cards_for_b = ('3s', '5s')
+    cards_for_c = ('6s', '7s')
+    expected_declared_map = ({CARD: '2s', PLAYER: 'a'},
+                             {CARD: '3s', PLAYER: 'b'},
+                             {CARD: '4s', PLAYER: 'a'},
+                             {CARD: '5s', PLAYER: 'b'},
+                             {CARD: '6s', PLAYER: 'c'},
+                             {CARD: '7s', PLAYER: 'c'})
+
+    state: DataFrame = state_methods.create_default_state(players)
+    state = state_methods.update_state_upon_receiving_cards(state, 'a', cards_for_a)
+    state = state_methods.update_state_upon_receiving_cards(state, 'b', cards_for_b)
+    state = state_methods.update_state_upon_receiving_cards(state, 'c', cards_for_c)
+
+    # check declaration
+    opt_declared_map = state_methods.able_to_declare(state, players, CardSet.LOW_SPADES)
+
+    assert (opt_declared_map.is_present())
+    assert expected_declared_map == opt_declared_map.get()
+

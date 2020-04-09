@@ -1,7 +1,7 @@
 import logging
 
 from app.game.data import Turn, Declaration, CardSet
-from app.player import TurnDelegate, QuestionDelegate, state_methods
+from app.player import TurnDelegate, ComputerPlayerDelegate, state_methods
 from app.network import NetworkDelegate
 from app.constants import *
 from app.util import Optional
@@ -10,7 +10,7 @@ from app.game import game_messages
 logger = logging.getLogger(__name__)
 
 
-class Game(QuestionDelegate, TurnDelegate):
+class Game(ComputerPlayerDelegate, TurnDelegate):
     """Responsible for managing a game and its players"""
 
     def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
@@ -36,6 +36,7 @@ class Game(QuestionDelegate, TurnDelegate):
 
         self.setup_state()
 
+    # ComputerPlayerDelegate Methods
     async def handle_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
         self.up_next = questioner if outcome else respondent
@@ -44,6 +45,12 @@ class Game(QuestionDelegate, TurnDelegate):
         self.ledger.append(turn)
         for key, player in self.players.items():
             await player.received_next_turn(turn)
+
+    async def computer_generated_declaration(self, player: str, card_set: CardSet, declared_map: tuple):
+        pass
+
+    def get_next_turn(self) -> str:
+        return self.up_next
 
     async def handle_declaration(self, player: str, card_set: CardSet, declared_map: list):
         outcome = True

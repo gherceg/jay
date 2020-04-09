@@ -1,10 +1,10 @@
 from app.game import game_builder
 from app.player import NetworkPlayer, ComputerPlayer
 from app.test.mocks.MockTurnDelegate import MockTurnDelegate
-from app.test.mocks.MockQuestionDelegate import MockQuestionDelegate
+from app.test.mocks.MockComputerPlayerDelegate import MockComputerPlayerDelegate
 
 mock_network_delegate = MockTurnDelegate()
-mock_question_delegate = MockQuestionDelegate()
+mock_question_delegate = MockComputerPlayerDelegate()
 
 
 def test_network_player_setup():
