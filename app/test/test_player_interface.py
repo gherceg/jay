@@ -1,10 +1,11 @@
-from app.player import NetworkPlayer
+from app.player import PlayerInterface
 from app.player import state_methods
+from app.constants import *
 
 
 def test_get_cards():
     expected_cards = ('2s', '4c', '9h', 'ad')
-    player = NetworkPlayer('a', ('what', 'ever'), ('doesnt', 'matter', 'at all'))
+    player = PlayerInterface('a', ('what', 'ever'), ('doesnt', 'matter', 'at all'), NETWORK_PLAYER)
 
     state = state_methods.update_state_upon_receiving_cards(player.state, 'a', expected_cards)
     player.state = state
@@ -22,7 +23,7 @@ def test_get_cards():
 def test_has_card_is_true():
     # setup
     expected_cards = ('2s', '4c', '9h', 'ad')
-    player = NetworkPlayer('a', ('what', 'ever'), ('doesnt', 'matter', 'at all'))
+    player = PlayerInterface('a', ('what', 'ever'), ('doesnt', 'matter', 'at all'), NETWORK_PLAYER)
 
     # test
     state = state_methods.update_state_upon_receiving_cards(player.state, 'a', expected_cards)
@@ -35,7 +36,7 @@ def test_has_card_is_true():
 
 def test_has_card_is_false():
     expected_cards = ('2s', '4c', '9h', 'ad')
-    player = NetworkPlayer('a', ('what', 'ever'), ('doesnt', 'matter', 'at all'))
+    player = PlayerInterface('a', ('what', 'ever'), ('doesnt', 'matter', 'at all'), NETWORK_PLAYER)
 
     state = state_methods.update_state_upon_receiving_cards(player.state, 'a', expected_cards)
     player.state = state

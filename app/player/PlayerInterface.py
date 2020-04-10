@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 class PlayerInterface:
 
-    def __init__(self, name: str, teammates: tuple, opposing_team: tuple):
+    def __init__(self, name: str, teammates: tuple, opposing_team: tuple, player_type: str):
+        self.player_type = player_type
         self.name: str = name
         self.state: DataFrame = state_methods.create_default_state(players=(name,) + teammates + opposing_team)
         self.teammates: tuple = teammates

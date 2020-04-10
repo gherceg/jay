@@ -1,8 +1,9 @@
 import logging
 import random
+import asyncio
 
 from app.game.data import Turn, Declaration, CardSet
-from app.player import ComputerPlayer, NetworkPlayerDelegate, ComputerPlayerDelegate, state_methods
+from app.player import PlayerInterface, state_methods, computer_player_methods as cpm
 from app.network import NetworkDelegate
 from app.constants import *
 from app.util import Optional
@@ -11,7 +12,7 @@ from app.game import game_messages
 logger = logging.getLogger(__name__)
 
 
-class Game(ComputerPlayerDelegate, NetworkPlayerDelegate):
+class Game:
     """Responsible for managing a game and its players"""
 
     def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
@@ -44,48 +45,88 @@ class Game(ComputerPlayerDelegate, NetworkPlayerDelegate):
             cards = player.get_cards()
             self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
 
+    async def handle_declaration(self, player: str, card_set: CardSet, declared_list: list):
+        declaration: Declaration = self.update_game_for_declaration(player, card_set, tuple(declared_list))
+        await self.send_declaration_update(declaration)
+
+        player_up_next = self.players[self.up_next]
+        while player_up_next.player_type == COMPUTER_PLAYER:
+            await self.automate_turn(player_up_next)
+            player_up_next = self.players[self.up_next]
+            await asyncio.sleep(COMPUTER_WAIT_TIME)
+
     async def handle_question(self, questioner: str, respondent: str, card: str):
+        turn: Turn = self.update_game_for_question(questioner, respondent, card)
+        await self.send_question_update(turn)
+
+        player_up_next = self.players[self.up_next]
+        while player_up_next.player_type == COMPUTER_PLAYER:
+            await self.automate_turn(player_up_next)
+            player_up_next = self.players[self.up_next]
+            await asyncio.sleep(COMPUTER_WAIT_TIME)
+
+    async def automate_turn(self, player: PlayerInterface):
+        logger.info(f'{self.up_next} is generating a turn')
+        generated_turn: dict = cpm.generate_turn(player)
+        if generated_turn[TURN_TYPE] == QUESTION:
+            turn: Turn = self.update_game_for_question(generated_turn[QUESTIONER], generated_turn[RESPONDENT],
+                                                       generated_turn[CARD])
+            await self.send_question_update(turn)
+        elif generated_turn[TURN_TYPE] == DECLARATION:
+            declaration: Declaration = self.update_game_for_declaration(generated_turn[NAME],
+                                                                        generated_turn[CARD_SET],
+                                                                        generated_turn[DECLARED_MAP])
+            await self.send_declaration_update(declaration)
+        else:
+            logging.error(f'Returned dictionary turn type value is {generated_turn[TURN_TYPE]}')
+
+    def update_game_for_question(self, questioner: str, respondent: str, card: str) -> Turn:
         outcome = self.does_player_have_card(respondent, card)
+        logger.info(
+            f'Updating game for question: {questioner} asking {respondent} for the {card}. Outcome is {outcome}')
         self.up_next = questioner if outcome else respondent
         turn = Turn(questioner, respondent, card, outcome)
         self.state = state_methods.update_state_with_turn(self.state, turn)
         self.ledger.append(turn)
         for key, player in self.players.items():
-            await player.received_next_turn(turn)
+            player.received_next_turn(turn)
+        return turn
 
-    async def handle_declaration(self, player: str, card_set: CardSet, declared_map: list):
+    def update_game_for_declaration(self, player: str, card_set: CardSet, declared_list: tuple) -> Declaration:
         outcome = True
-        for card_player_pair in declared_map:
+        for card_player_pair in declared_list:
             outcome = self.does_player_have_card(card_player_pair[PLAYER], card_player_pair[CARD]) and outcome
 
         # TODO not the most elegant way to do this
         team_name = self.get_team_for_player(player) if outcome else self.get_opposing_team_for_player(player)
         self.set_counts[team_name] += 1
 
-        declaration = Declaration(player, card_set, declared_map, outcome)
+        declaration: Declaration = Declaration(player, card_set, declared_list, outcome)
+
         self.state = state_methods.update_state_with_declaration(self.state, declaration)
         self.ledger.append(declaration)
         for key, player in self.players.items():
-            await player.received_declaration(declaration)
+            player.received_declaration(declaration)
+        return declaration
 
-    # ComputerPlayerDelegate Methods
-    async def computer_generated_turn(self, questioner: str, respondent: str, card: str):
-        await self.handle_question(questioner, respondent, card)
+    async def send_question_update(self, turn):
+        for key, player in self.players.items():
+            if player.player_type == NETWORK_PLAYER:
+                await self.broadcast_turn(player, turn)
 
-    async def computer_generated_declaration(self, player: str, card_set: CardSet, declared_map: tuple):
-        await self.handle_declaration(player, card_set, list(declared_map))
+    async def send_declaration_update(self, declaration: Declaration):
+        for key, player in self.players.items():
+            if player.player_type == NETWORK_PLAYER:
+                await self.broadcast_declaration(player, declaration)
 
-    def get_next_turn(self) -> str:
-        return self.up_next
+    # Network Methods
+    async def broadcast_turn(self, player: PlayerInterface, turn: Turn):
+        contents = game_messages.game_update(self, player, Optional(turn))
+        await self.network_delegate.broadcast_message(player.name, contents)
 
-    # NetworkPlayerDelegate Methods
-    async def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
-        contents = game_messages.game_update(self, self.players[player], Optional(turn))
-        await self.network_delegate.broadcast_message(player, contents)
-
-    async def broadcast_declaration(self, player: str, declaration: Declaration, cards: tuple):
-        contents = game_messages.game_update_for_declaration(self, self.players[player], declaration)
-        await self.network_delegate.broadcast_message(player, contents)
+    async def broadcast_declaration(self, player: PlayerInterface, declaration: Declaration):
+        contents = game_messages.game_update_for_declaration(self, player, declaration)
+        await self.network_delegate.broadcast_message(player.name, contents)
 
     # Set Methods
     def set_player_to_start(self, player: str):

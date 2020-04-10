@@ -1,12 +1,14 @@
 import copy
 import random
+import logging
 
 from app.game import Game
-from app.player import NetworkPlayer, ComputerPlayer
+from app.player import PlayerInterface
 from app.network import NetworkDelegate
 from app.util import util_methods
 from app.constants import *
 
+logger = logging.getLogger(__name__)
 
 def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
     """Given a dictionary containing game settings, setup a new game and create the players"""
@@ -24,13 +26,6 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
 
     pin = random.randint(1000, 9999)
     game = Game(pin, network_delegate, players, teams, settings[VIRTUAL_DECK])
-
-    # now that the game has been created, set appropriate delegates on players
-    for player in players:
-        if isinstance(player, NetworkPlayer):
-            player.set_delegate(game)
-        elif isinstance(player, ComputerPlayer):
-            player.set_delegate(game)
 
     player = get_first_turn(players)
     # game.set_player_to_start(player)
@@ -58,13 +53,11 @@ def setup_players(settings: dict, teams: tuple) -> tuple:
     for player in settings[PLAYERS]:
         opposing_team = get_opposing_team(teams, player[NAME])
         teammates = get_teammates(teams, player[NAME])
+        player_type = player[PLAYER_TYPE]
+        if player_type != NETWORK_PLAYER and player_type != COMPUTER_PLAYER:
+            raise ValueError(f'Received invalid player type {player_type}')
 
-        if player[PLAYER_TYPE] == NETWORK_PLAYER:
-            player_to_add = NetworkPlayer(player[NAME], teammates, opposing_team)
-        elif player[PLAYER_TYPE] == COMPUTER_PLAYER:
-            player_to_add = ComputerPlayer(player[NAME], teammates, opposing_team)
-        else:
-            raise ValueError(f'Unrecognized player type key {player["type"]}')
+        player_to_add = PlayerInterface(player[NAME], teammates, opposing_team, player_type)
         players.append(player_to_add)
 
     return tuple(players)

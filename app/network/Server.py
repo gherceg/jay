@@ -101,7 +101,8 @@ class Server(NetworkDelegate):
         if QUESTIONER in data and RESPONDENT in data and CARD in data:
             await self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
         else:
-            await network_methods.send_error(websocket, 'Question Request: Missing questioner, respondent or card field')
+            await network_methods.send_error(websocket,
+                                             'Question Request: Missing questioner, respondent or card field')
 
     async def handle_declaration(self, websocket: WebSocket, data: dict):
         logger.info('Received declaration')
@@ -109,7 +110,8 @@ class Server(NetworkDelegate):
         if NAME in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
             await self.game.handle_declaration(data[NAME], card_set.get(), data[DECLARED_MAP])
         else:
-            await network_methods.send_error(websocket, 'Declaration Request: Missing player, card_set or declared_map field')
+            await network_methods.send_error(websocket,
+                                             'Declaration Request: Missing player, card_set or declared_map field')
 
     def register_new_client(self, player_name: str, websocket: WebSocket) -> str:
         logger.info('Registering new client with id: {0}'.format(player_name))
@@ -117,7 +119,6 @@ class Server(NetworkDelegate):
         return player_name
 
     # Network Delegate Implementation
-    # TODO: should only be responsible for linking the player with the correct websocket, then passing on info provided to client
     async def broadcast_message(self, name: str, contents: Dict):
         # TODO: come back to figure out how to register clients
         logger.debug('Client keys: {0}'.format(self.clients.keys()))

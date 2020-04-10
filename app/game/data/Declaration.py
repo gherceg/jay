@@ -3,10 +3,10 @@ from app.util import util_methods
 
 
 class Declaration:
-    def __init__(self, player: str, card_set: CardSet, declared_map: list, outcome: bool):
+    def __init__(self, player: str, card_set: CardSet, declared_list: tuple, outcome: bool):
         self.player = player
         self.card_set = card_set
-        self.declared_map = declared_map
+        self.declared_list = declared_list
         self.outcome = outcome
 
     def __repr__(self):
@@ -19,5 +19,5 @@ class Declaration:
         return {'type': 'declaration',
                 'player': self.player,
                 'card_set': util_methods.key_for_card_set(self.card_set),
-                'declared_map': self.declared_map,
+                'declared_map': self.declared_list,
                 'outcome': self.outcome}

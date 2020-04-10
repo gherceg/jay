@@ -34,10 +34,12 @@ SELECTED_PLAYER = "selected_player"
 GAME_UPDATE = "game_update"
 ERROR = "error"
 DESCRIPTION = "description"
-TURN_TYPE = "turn_type"
 TYPE = "type"
 TURN = "turn"
 LAST_TURN = "last_turn"
+
+# computer generation keys
+TURN_TYPE = "turn_type"
 
 # card_set values
 LOW_SPADES_KEY = "low_spades"
@@ -48,4 +50,6 @@ LOW_HEARTS_KEY = "low_hearts"
 HIGH_HEARTS_KEY = "high_hearts"
 LOW_DIAMONDS_KEY = "low_diamonds"
 HIGH_DIAMONDS_KEY = "high_diamonds"
+
+COMPUTER_WAIT_TIME = 5
 

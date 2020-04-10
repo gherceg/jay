@@ -1,10 +1,6 @@
 from app.game import game_builder
-from app.player import NetworkPlayer, ComputerPlayer
-from app.test.mocks.MockNetworkPlayerDelegate import MockNetworkPlayerDelegate
-from app.test.mocks.MockComputerPlayerDelegate import MockComputerPlayerDelegate
-
-mock_network_delegate = MockNetworkPlayerDelegate()
-mock_question_delegate = MockComputerPlayerDelegate()
+from app.player import PlayerInterface
+from app.constants import *
 
 
 def test_network_player_setup():
@@ -23,7 +19,7 @@ def test_network_player_setup():
     players = game_builder.setup_players(player_info, teams)
 
     for player in players:
-        assert isinstance(player, NetworkPlayer)
+        assert player.player_type == NETWORK_PLAYER
 
 
 def test_computer_player_setup():
@@ -42,7 +38,7 @@ def test_computer_player_setup():
     players = game_builder.setup_players(player_info, teams)
 
     for player in players:
-        assert isinstance(player, ComputerPlayer)
+        assert player.player_type == COMPUTER_PLAYER
 
 
 def test_player_setup_invalid_type_raises_exception():

@@ -57,11 +57,13 @@ def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
                                                                       turn.questioner,
                                                                       CardStatus.UNKNOWN,
                                                                       CardStatus.MIGHT_HAVE)
+    
+    #TODO use process of elimination to set value to DOES_HAVE if rest of players are DOES_NOT_HAVE
     return state
 
 
 def update_state_with_declaration(state: DataFrame, declaration: Declaration) -> DataFrame:
-    for player_card_pair in declaration.declared_map:
+    for player_card_pair in declaration.declared_list:
         state.loc[player_card_pair[CARD], :] = CardStatus.DECLARED
 
     return state
