@@ -4,7 +4,7 @@ import asyncio
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from typing import Dict
 
-from app.game import game_messages, game_builder
+from app.game import game_messages, game_builder, game_validation
 from app.util import util_methods
 from app.constants import *
 from app.network import NetworkDelegate, network_methods
@@ -97,12 +97,11 @@ class Server(NetworkDelegate):
             await network_methods.send_error('Select Player Request: Missing name field')
 
     async def handle_question(self, websocket: WebSocket, data: dict):
-        logger.info('Received question')
-        if QUESTIONER in data and RESPONDENT in data and CARD in data:
-            await self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
+        error = game_validation.validate_question(self.game, data)
+        if error.is_present():
+            await network_methods.send_error(websocket, error.get())
         else:
-            await network_methods.send_error(websocket,
-                                             'Question Request: Missing questioner, respondent or card field')
+            await self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
 
     async def handle_declaration(self, websocket: WebSocket, data: dict):
         logger.info('Received declaration')

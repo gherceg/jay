@@ -9,12 +9,7 @@ from app.constants import *
 logger = logging.getLogger(__name__)
 
 
-def eligible_sets(cards: tuple) -> tuple:
-    sets = set()
-    for card in cards:
-        sets.add(util_methods.set_for_card(card))
 
-    return tuple(sets)
 
 
 def generate_turn(player: PlayerInterface) -> dict:
@@ -27,7 +22,7 @@ def generate_turn(player: PlayerInterface) -> dict:
             return declaration_dict(player.name, card_set, opt_declared_map.get())
 
     # could not declare, so ask a question
-    sets = eligible_sets(player.get_cards())
+    sets = util_methods.eligible_sets(player.get_cards())
     card, player_to_ask = state_methods.get_eligible_question_pair(player.state, sets, player.opposing_team)
     logger.info(f'{player.name} is asking {player_to_ask} for the {card}')
     return question_dict(player.name, player_to_ask, card)

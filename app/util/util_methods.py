@@ -5,6 +5,14 @@ from app.util import Optional
 from app.constants import *
 
 
+def eligible_sets(cards: tuple) -> tuple:
+    sets = set()
+    for card in cards:
+        sets.add(set_for_card(card))
+
+    return tuple(sets)
+
+
 def set_for_card(card) -> CardSet:
     for card_set in CardSet:
         if card in card_set.value:
