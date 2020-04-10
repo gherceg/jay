@@ -1,8 +1,8 @@
-from app.player import TurnDelegate
+from app.player import NetworkPlayerDelegate
 from app.game.data import Turn, Declaration
 
 
-class MockTurnDelegate(TurnDelegate):
+class MockNetworkPlayerDelegate(NetworkPlayerDelegate):
     received_update = False
     turn_received: Turn
 

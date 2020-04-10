@@ -1,9 +1,9 @@
 from app.game import game_builder
 from app.player import NetworkPlayer, ComputerPlayer
-from app.test.mocks.MockTurnDelegate import MockTurnDelegate
+from app.test.mocks.MockNetworkPlayerDelegate import MockNetworkPlayerDelegate
 from app.test.mocks.MockComputerPlayerDelegate import MockComputerPlayerDelegate
 
-mock_network_delegate = MockTurnDelegate()
+mock_network_delegate = MockNetworkPlayerDelegate()
 mock_question_delegate = MockComputerPlayerDelegate()
 
 

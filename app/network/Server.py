@@ -107,7 +107,7 @@ class Server(NetworkDelegate):
         logger.info('Received declaration')
         card_set = util_methods.card_set_for_key(data[CARD_SET])
         if NAME in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
-            await self.game.handle_declaration(data[NAME], data[CARD_SET], data[DECLARED_MAP])
+            await self.game.handle_declaration(data[NAME], card_set.get(), data[DECLARED_MAP])
         else:
             await network_methods.send_error(websocket, 'Declaration Request: Missing player, card_set or declared_map field')
 

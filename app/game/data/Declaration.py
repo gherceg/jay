@@ -1,4 +1,5 @@
 from app.game.data.CardSet import CardSet
+from app.util import util_methods
 
 
 class Declaration:
@@ -17,6 +18,6 @@ class Declaration:
     def to_dict(self) -> dict:
         return {'type': 'declaration',
                 'player': self.player,
-                'card_set': self.card_set,
+                'card_set': util_methods.key_for_card_set(self.card_set),
                 'declared_map': self.declared_map,
                 'outcome': self.outcome}

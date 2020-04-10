@@ -3,7 +3,7 @@ import abc
 from app.game.data import Turn, Declaration
 
 
-class TurnDelegate(abc.ABC):
+class NetworkPlayerDelegate(abc.ABC):
 
     @abc.abstractmethod
     async def broadcast_turn(self, player: str, turn: Turn, cards: tuple):

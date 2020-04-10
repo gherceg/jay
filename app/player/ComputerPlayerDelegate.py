@@ -10,7 +10,7 @@ class ComputerPlayerDelegate(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def handle_question(self, questioner: str, respondent: str, card: str):
+    async def computer_generated_turn(self, questioner: str, respondent: str, card: str):
         pass
 
     @abc.abstractmethod

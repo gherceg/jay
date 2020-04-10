@@ -1,5 +1,6 @@
 import logging
 from pandas import DataFrame
+import random
 
 from app.game.data import Turn, Declaration, CardStatus, CardSet
 from app.util import util_methods, data_frame_methods, Optional
@@ -89,7 +90,40 @@ def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optiona
 
 
 def get_eligible_question_pair(state: DataFrame, sets: tuple, opponents: tuple) -> (str, str):
-    # for card_set in sets:
-        # opponents_df = state.loc[list(card_set.value), list(opponents)]
+    have = []
+    might_have = []
+    unknown = []
+    does_not_have = []
+    for card_set in sets:
+        opponents_df = state.loc[list(card_set.value), list(opponents)]
+        have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_HAVE]
+        have_for_set = list(have_df[have_df.notnull()].stack().index)
 
-    return "test", "test"
+        might_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.MIGHT_HAVE]
+        might_have_for_set = list(might_have_df[might_have_df.notnull()].stack().index)
+
+        unknown_df = opponents_df[opponents_df[list(opponents)] == CardStatus.UNKNOWN]
+        unknown_for_set = list(unknown_df[unknown_df.notnull()].stack().index)
+
+        does_not_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_NOT_HAVE]
+        does_not_have_for_set = list(does_not_have_df[does_not_have_df.notnull()].stack().index)
+
+        have = have + have_for_set
+        might_have = might_have + might_have_for_set
+        unknown = unknown + unknown_for_set
+        does_not_have = does_not_have + does_not_have_for_set
+
+    logger.info(f'Computer Turn\nDoes Have: {len(have)}\nMight Have: {len(might_have)}\nUnknown: {len(unknown)}\nDoes Not Have: {len(does_not_have)}')
+    if len(have) > 0:
+        return random.choice(have)
+    elif len(might_have) > 0:
+        return random.choice(might_have)
+    elif len(unknown) > 0:
+        return random.choice(unknown)
+    elif len(does_not_have) > 0:
+        return random.choice(does_not_have)
+    else:
+        raise Exception('Could not find any cards to ask for. Should never happen')
+
+
+

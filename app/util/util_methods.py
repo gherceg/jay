@@ -54,3 +54,24 @@ def card_set_for_key(key: str) -> Optional:
         return Optional(CardSet.HIGH_HEARTS)
     else:
         return Optional.empty()
+
+
+def key_for_card_set(card_set: CardSet) -> str:
+    if card_set == CardSet.LOW_SPADES:
+        return LOW_SPADES_KEY
+    elif card_set == CardSet.HIGH_SPADES:
+        return HIGH_SPADES_KEY
+    elif card_set == CardSet.LOW_HEARTS:
+        return LOW_HEARTS_KEY
+    elif card_set == CardSet.HIGH_HEARTS:
+        return HIGH_HEARTS_KEY
+    elif card_set == CardSet.LOW_DIAMONDS:
+        return LOW_DIAMONDS_KEY
+    elif card_set == CardSet.HIGH_DIAMONDS:
+        return HIGH_DIAMONDS_KEY
+    elif card_set == CardSet.LOW_CLUBS:
+        return LOW_CLUBS_KEY
+    elif card_set == CardSet.HIGH_CLUBS:
+        return HIGH_CLUBS_KEY
+    else:
+        raise Exception(f'CardSet {card_set} does not have defined key')

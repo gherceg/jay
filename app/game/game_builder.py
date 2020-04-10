@@ -28,12 +28,13 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
     # now that the game has been created, set appropriate delegates on players
     for player in players:
         if isinstance(player, NetworkPlayer):
-            player.set_turn_delegate(game)
+            player.set_delegate(game)
         elif isinstance(player, ComputerPlayer):
-            player.set_question_delegate(game)
+            player.set_delegate(game)
 
-    game.up_next = get_first_turn(players)
-
+    player = get_first_turn(players)
+    # game.set_player_to_start(player)
+    game.set_player_to_start('Player 0')
     return game
 
 

@@ -1,11 +1,11 @@
-from app.player import PlayerInterface, TurnDelegate
+from app.player import PlayerInterface, NetworkPlayerDelegate
 from app.game.data import Turn, Declaration
 
 
 class NetworkPlayer(PlayerInterface):
-    delegate: TurnDelegate = None
+    delegate: NetworkPlayerDelegate = None
 
-    def set_turn_delegate(self, delegate: TurnDelegate):
+    def set_delegate(self, delegate: NetworkPlayerDelegate):
         self.delegate = delegate
 
     # Player Interface Methods

@@ -1,7 +1,8 @@
 import logging
+import random
 
 from app.game.data import Turn, Declaration, CardSet
-from app.player import TurnDelegate, ComputerPlayerDelegate, state_methods
+from app.player import ComputerPlayer, NetworkPlayerDelegate, ComputerPlayerDelegate, state_methods
 from app.network import NetworkDelegate
 from app.constants import *
 from app.util import Optional
@@ -10,7 +11,7 @@ from app.game import game_messages
 logger = logging.getLogger(__name__)
 
 
-class Game(ComputerPlayerDelegate, TurnDelegate):
+class Game(ComputerPlayerDelegate, NetworkPlayerDelegate):
     """Responsible for managing a game and its players"""
 
     def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
@@ -36,7 +37,13 @@ class Game(ComputerPlayerDelegate, TurnDelegate):
 
         self.setup_state()
 
-    # ComputerPlayerDelegate Methods
+    def setup_state(self):
+        self.state = state_methods.create_default_state(tuple(self.players.keys()))
+
+        for (name, player) in self.players.items():
+            cards = player.get_cards()
+            self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
+
     async def handle_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
         self.up_next = questioner if outcome else respondent
@@ -45,12 +52,6 @@ class Game(ComputerPlayerDelegate, TurnDelegate):
         self.ledger.append(turn)
         for key, player in self.players.items():
             await player.received_next_turn(turn)
-
-    async def computer_generated_declaration(self, player: str, card_set: CardSet, declared_map: tuple):
-        pass
-
-    def get_next_turn(self) -> str:
-        return self.up_next
 
     async def handle_declaration(self, player: str, card_set: CardSet, declared_map: list):
         outcome = True
@@ -67,7 +68,17 @@ class Game(ComputerPlayerDelegate, TurnDelegate):
         for key, player in self.players.items():
             await player.received_declaration(declaration)
 
-    # TurnDelegate Methods
+    # ComputerPlayerDelegate Methods
+    async def computer_generated_turn(self, questioner: str, respondent: str, card: str):
+        await self.handle_question(questioner, respondent, card)
+
+    async def computer_generated_declaration(self, player: str, card_set: CardSet, declared_map: tuple):
+        await self.handle_declaration(player, card_set, list(declared_map))
+
+    def get_next_turn(self) -> str:
+        return self.up_next
+
+    # NetworkPlayerDelegate Methods
     async def broadcast_turn(self, player: str, turn: Turn, cards: tuple):
         contents = game_messages.game_update(self, self.players[player], Optional(turn))
         await self.network_delegate.broadcast_message(player, contents)
@@ -76,13 +87,12 @@ class Game(ComputerPlayerDelegate, TurnDelegate):
         contents = game_messages.game_update_for_declaration(self, self.players[player], declaration)
         await self.network_delegate.broadcast_message(player, contents)
 
-    def setup_state(self):
-        self.state = state_methods.create_default_state(tuple(self.players.keys()))
+    # Set Methods
+    def set_player_to_start(self, player: str):
+        self.up_next = player
+        # TODO: if computer, let them know
 
-        for (name, player) in self.players.items():
-            cards = player.get_cards()
-            self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
-
+    # Get Methods
     def get_player_names(self):
         return list(self.players.keys())
 
@@ -105,6 +115,10 @@ class Game(ComputerPlayerDelegate, TurnDelegate):
                 return team_name
 
     # PRIVATE METHODS
+
+    def determine_player_up_next(self, player: str, outcome: bool) -> str:
+        # TODO: should keep track of those still in play
+        pass
 
     def does_player_have_card(self, player_name: str, card: str):
         if player_name not in self.players.keys():
