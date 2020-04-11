@@ -37,7 +37,7 @@ def game_update(game: Game, player: PlayerInterface) -> Dict:
                 NAME: player.name,
                 CARDS: player.get_cards()
             },
-            NEXT_TURN: game.up_next,
+            NEXT_TURN: game.up_next.get() if game.up_next.is_present() else '',
             TEAMS_KEY: formatted_teams(game)
         }
     }
@@ -51,6 +51,15 @@ def game_update(game: Game, player: PlayerInterface) -> Dict:
         }
 
     return contents
+
+
+def end_game(game: Game) -> Dict:
+    return {
+        MESSAGE_TYPE: END_GAME,
+        DATA: {
+            TEAMS_KEY: formatted_teams(game)
+        }
+    }
 
 
 def formatted_teams(game: Game) -> list:

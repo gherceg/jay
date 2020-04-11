@@ -32,8 +32,6 @@ class Server(NetworkDelegate):
 
     async def handle_message(self, websocket: WebSocket, message: dict):
 
-        logger.info('Received message from client: {0}'.format(message))
-
         if MESSAGE_TYPE not in message:
             await network_methods.send_error(websocket, 'Cannot parse message: Missing message_type field')
 
@@ -104,7 +102,6 @@ class Server(NetworkDelegate):
             await self.game.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
 
     async def handle_declaration(self, websocket: WebSocket, data: dict):
-        logger.info('Received declaration')
         card_set = util_methods.card_set_for_key(data[CARD_SET])
         if NAME in data and CARD_SET in data and DECLARED_MAP in data and card_set.is_present():
             await self.game.handle_declaration(data[NAME], card_set.get(), data[DECLARED_MAP])
@@ -113,16 +110,15 @@ class Server(NetworkDelegate):
                                              'Declaration Request: Missing player, card_set or declared_map field')
 
     def register_new_client(self, player_name: str, websocket: WebSocket) -> str:
-        logger.info('Registering new client with id: {0}'.format(player_name))
+        logger.info('Registering new client with player: {0}'.format(player_name))
         self.clients[player_name] = websocket
         return player_name
 
     # Network Delegate Implementation
     async def broadcast_message(self, name: str, contents: Dict):
         # TODO: come back to figure out how to register clients
-        logger.debug('Client keys: {0}'.format(self.clients.keys()))
         if name in self.clients.keys():
             websocket = self.clients[name]
             await websocket.send_json(contents)
         else:
-            logger.warning('Could not find {0} in client dict'.format(name))
+            logger.warning('Could not faind {0} in client dict'.format(name))

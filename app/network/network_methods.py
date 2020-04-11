@@ -20,5 +20,5 @@ async def send_error(websocket: WebSocket, message: str):
 
 
 async def send_message(websocket: WebSocket, data: Dict):
-    logger.info('Sending message to websocket {0}: {1}'.format(websocket.client, data))
+    logger.info('Sending {0} message to websocket {1}'.format(data[MESSAGE_TYPE], websocket.client))
     await websocket.send_json(data)

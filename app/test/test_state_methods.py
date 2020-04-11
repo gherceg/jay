@@ -6,7 +6,7 @@ from app.network import Server
 from app.player import state_methods
 from app.util import data_frame_methods
 from app.util import util_methods
-from app.game.data import CardStatus, CardSet
+from app.game.data import CardStatus, CardSet, Turn
 from app.constants import *
 
 logger = logging.getLogger(__name__)
@@ -100,3 +100,21 @@ def test_process_of_elimination():
     state = state_methods.process_of_elimination(state, 'ah')
     print(state)
     assert state.loc['ah', 'c'] == CardStatus.DOES_HAVE
+
+
+def test_players_out_of_cards():
+    players = ('a', 'b', 'c', 'd')
+    cards_for_a = ('2s', '4s')
+    cards_for_b = ('3s', '5s')
+    cards_for_c = ('6s',)
+    cards_for_d = ('7s',)
+    state: DataFrame = state_methods.create_default_state(players)
+    state = state_methods.update_state_upon_receiving_cards(state, 'a', cards_for_a)
+    state = state_methods.update_state_upon_receiving_cards(state, 'b', cards_for_b)
+    state = state_methods.update_state_upon_receiving_cards(state, 'c', cards_for_c)
+    state = state_methods.update_state_upon_receiving_cards(state, 'd', cards_for_d)
+    turn = Turn('c', 'd', '7s', True)
+    state = state_methods.update_state_with_turn(state, turn)
+
+    players = state_methods.get_players_out_of_cards(state)
+    assert 'd' in players

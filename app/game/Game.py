@@ -20,7 +20,7 @@ class Game:
         self.network_delegate = network_delegate
         self.pin: int = pin
         self.ledger: list = []
-        self.up_next: str = None
+        self.up_next: Optional[str] = Optional.empty()
         self.state: DataFrame = None
         self.virtual_deck: bool = virtual_deck
 
@@ -49,10 +49,15 @@ class Game:
         logger.info(self.state)
         await self.send_game_update()
 
-        player_up_next = self.players[self.up_next]
-        while player_up_next.player_type == COMPUTER_PLAYER:
-            await self.automate_turn(player_up_next)
-            player_up_next = self.players[self.up_next]
+        if self.up_next.is_empty():
+            logger.info('Sending end game messages!')
+            await self.send_end_game()
+            return
+
+        player_up_next = self.get_player_up_next()
+        while player_up_next.is_present() and player_up_next.get().player_type == COMPUTER_PLAYER:
+            await self.automate_turn(player_up_next.get())
+            player_up_next = self.get_player_up_next()
             await asyncio.sleep(COMPUTER_WAIT_TIME)
 
     async def handle_question(self, questioner: str, respondent: str, card: str):
@@ -60,10 +65,10 @@ class Game:
         self.update_game_for_question(questioner, respondent, card)
         await self.send_game_update()
 
-        player_up_next = self.players[self.up_next]
-        while player_up_next.player_type == COMPUTER_PLAYER:
-            await self.automate_turn(player_up_next)
-            player_up_next = self.players[self.up_next]
+        player_up_next = self.get_player_up_next()
+        while player_up_next.is_present() and player_up_next.get().player_type == COMPUTER_PLAYER:
+            await self.automate_turn(player_up_next.get())
+            player_up_next = self.get_player_up_next()
             await asyncio.sleep(COMPUTER_WAIT_TIME)
 
     async def automate_turn(self, player: PlayerInterface):
@@ -90,18 +95,18 @@ class Game:
     def update_game_for_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
         logger.info(
-            f'Updating game for question: {questioner} asking {respondent} for the {card}. Outcome is {outcome}')
-        self.up_next = questioner if outcome else respondent
+            f'QUESTION: {questioner} asking {respondent} for the {card}. Outcome is {outcome}')
+        self.up_next = Optional(questioner) if outcome else Optional(respondent)
         turn = Turn(questioner, respondent, card, outcome)
-        self.state = state_methods.update_state_with_turn(self.state, turn)
         self.ledger.append(turn)
-        for key, player in self.players.items():
-            player.received_next_turn(turn)
+        self.update_state_for_question(turn)
 
     def update_game_for_declaration(self, player_name: str, card_set: CardSet, declared_list: tuple):
         outcome = True
         for card_player_pair in declared_list:
             outcome = self.does_player_have_card(card_player_pair[PLAYER], card_player_pair[CARD]) and outcome
+        logger.info(
+            f'DECLARATION: {player_name} declared the {card_set}. Outcome is {outcome}\n{declared_list}')
 
         # TODO not the most elegant way to do this
         player_who_declared = self.players[player_name]
@@ -109,30 +114,60 @@ class Game:
         self.set_counts[team_name] += 1
 
         declaration: Declaration = Declaration(player_name, card_set, declared_list, outcome)
-
-        self.state = state_methods.update_state_with_declaration(self.state, declaration)
         self.ledger.append(declaration)
-        for key, player in self.players.items():
-            player.received_declaration(declaration)
+
+        self.update_state_for_declaration(declaration)
 
         self.up_next = self.determine_player_up_next_after_declaration(player_who_declared, outcome)
+
+    def update_state_for_declaration(self, declaration: Declaration):
+        # update game's state
+        self.state = state_methods.update_state_with_declaration(self.state, declaration)
+
+        players_out = state_methods.get_players_out_of_cards(self.state)
+        for key, player in self.players.items():
+            player.received_declaration(declaration, players_out)
+
+    def update_state_for_question(self, question: Turn):
+        # update game's state
+        self.state = state_methods.update_state_with_turn(self.state, question)
+
+        players_out = state_methods.get_players_out_of_cards(self.state)
+        for key, player in self.players.items():
+            player.received_next_turn(question, players_out)
 
     async def send_game_update(self):
         for key, player in self.players.items():
             if player.player_type == NETWORK_PLAYER:
                 await self.broadcast_turn(player)
 
+    async def send_end_game(self):
+        for key, player in self.players.items():
+            if player.player_type == NETWORK_PLAYER:
+                await self.broadcast_end_game()
+
     # Network Methods
     async def broadcast_turn(self, player: PlayerInterface):
         contents = game_messages.game_update(self, player)
         await self.network_delegate.broadcast_message(player.name, contents)
 
+    async def broadcast_end_game(self):
+        contents = game_messages.end_game(self)
+        await self.network_delegate.broadcast_message(contents)
+
     # Set Methods
     def set_player_to_start(self, player: str):
-        self.up_next = player
+        self.up_next = Optional(player)
         # TODO: if computer, let them know
 
     # Get Methods
+    def get_player_up_next(self) -> Optional[PlayerInterface]:
+        if self.up_next.is_present():
+            player = self.players[self.up_next.get()]
+            return Optional(player)
+        else:
+            return Optional.empty()
+
     def get_player_names(self):
         return list(self.players.keys())
 
@@ -188,18 +223,49 @@ class Game:
             cards = player.get_cards()
             self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
 
-    def determine_player_up_next_after_declaration(self, player: PlayerInterface, outcome: bool) -> str:
+    def determine_player_up_next_after_declaration(self, player: PlayerInterface, outcome: bool) -> Optional[str]:
         eligible_opponents = self.get_opponents_in_play(player)
-        player_up_next = player if outcome else random.choice(eligible_opponents)
-        if not player_up_next.in_play:
-            teammates = self.get_teammates_in_play(player_up_next)
-            player_up_next = random.choice(self.get_teammates_in_play(player_up_next))
-        return player_up_next.name
+        eligible_teammates = self.get_teammates_in_play(player)
+
+        if outcome:
+            if player.in_play:
+                return Optional(player.name)
+            elif len(eligible_teammates) > 0:
+                teammate = random.choice(eligible_teammates)
+                return Optional(teammate.name)
+            elif len(eligible_opponents) > 0:
+                opponent = random.choice(eligible_opponents)
+                return Optional(opponent.name)
+            elif self.game_is_over():
+                return Optional.empty()
+            else:
+                raise Exception('Everyone is out but the game is not over.')
+        else:
+            if len(eligible_opponents) > 0:
+                opponent = random.choice(eligible_teammates)
+                return Optional(opponent.name)
+            elif player.in_play:
+                return Optional(player.name)
+            elif len(eligible_teammates) > 0:
+                teammate = random.choice(eligible_opponents)
+                return Optional(teammate.name)
+            elif self.game_is_over():
+                return Optional.empty()
+            else:
+                raise Exception('Everyone is out but the game is not over.')
 
     def does_player_have_card(self, player_name: str, card: str):
         if player_name not in self.players.keys():
             raise ValueError(f"Player {player_name} not found in game")
         return self.players[player_name].has_card(card)
+
+    def game_is_over(self) -> bool:
+        total_sets_won = 0
+        for set_count in self.set_counts.values():
+            total_sets_won += set_count
+
+        logger.info(f'Total sets won: {total_sets_won}')
+        return total_sets_won == 8
 
     # DEBBUG Method
     def verify_cards_left_makes_sense(self):

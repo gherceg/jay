@@ -20,3 +20,12 @@ def update_rows_with_old_to_new_for_column(state: DataFrame, rows: tuple, column
             state.loc[row, column] = new_value
 
     return state
+
+
+def update_rows_not_with_old_to_new_for_column(state: DataFrame, rows: tuple, column: str, old_value: object,
+                                               new_value: object) -> DataFrame:
+    for row in rows:
+        if state.loc[row, column] != old_value:
+            state.loc[row, column] = new_value
+
+    return state

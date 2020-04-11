@@ -58,9 +58,6 @@ def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
                                                                       CardStatus.UNKNOWN,
                                                                       CardStatus.MIGHT_HAVE)
 
-    # TODO use process of elimination to set value to DOES_HAVE if rest of players are DOES_NOT_HAVE
-    for card in util_methods.deck_of_cards():
-        state = process_of_elimination(state, card)
     return state
 
 
@@ -68,6 +65,22 @@ def update_state_with_declaration(state: DataFrame, declaration: Declaration) ->
     for player_card_pair in declaration.declared_list:
         state.loc[player_card_pair[CARD], :] = CardStatus.DECLARED
 
+    return state
+
+
+def update_state_with_players_out_of_cards(state: DataFrame, players: tuple) -> DataFrame:
+    # for each player specified, ensure all values are DECLARED or DOES_NOT_HAVE
+    cards = util_methods.deck_of_cards()
+    for player in players:
+        # update all values for a player to does not have unless value is declared
+        state = data_frame_methods.update_rows_not_with_old_to_new_for_column(state, cards, player, CardStatus.DECLARED,
+                                                                              CardStatus.DOES_NOT_HAVE)
+    return state
+
+
+def check_for_process_of_elimination(state: DataFrame) -> DataFrame:
+    for card in util_methods.deck_of_cards():
+        state = process_of_elimination(state, card)
     return state
 
 
@@ -91,6 +104,15 @@ def get_cards_for_player(state: DataFrame, player: str) -> tuple:
     return tuple(cards.keys())
 
 
+def get_players_out_of_cards(state: DataFrame) -> tuple:
+    players = []
+    for player in state.columns.tolist():
+        if len(get_cards_for_player(state, player)) == 0:
+            players.append(player)
+
+    return tuple(players)
+
+
 def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optional[tuple]:
     declared_map = []
     for card in card_set.value:
@@ -104,8 +126,3 @@ def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optiona
             declared_map.append(pair)
 
     return Optional(tuple(declared_map))
-
-
-
-
-
