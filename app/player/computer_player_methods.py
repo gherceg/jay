@@ -11,15 +11,15 @@ logger = logging.getLogger(__name__)
 
 
 def generate_turn(player: PlayerInterface, eligible_player_names: tuple) -> dict:
-    team_players = (player.name,) + player.teammates
-    set_to_declare = None
-    highest_score = -1
-    for card_set in CardSet:
-        score_for_set = score_declaration_for_set(player.state, team_players, card_set)
-        if score_for_set > highest_score:
-            highest_score = score_for_set
-            set_to_declare = card_set
-    logger.info(f'Checking declaration: would declare {set_to_declare} with a score of {highest_score}')
+    # team_players = (player.name,) + player.teammates
+    # set_to_declare = None
+    # highest_score = -1
+    # for card_set in CardSet:
+    #     score_for_set = score_declaration_for_set(player.state, team_players, card_set)
+    #     if score_for_set > highest_score:
+    #         highest_score = score_for_set
+    #         set_to_declare = card_set
+    # logger.info(f'Checking declaration: would declare {set_to_declare} with a score of {highest_score}')
 
     if len(eligible_player_names) == 0:
         # have to declare
@@ -119,7 +119,7 @@ def get_eligible_question_pair(state: DataFrame, cards_to_ask_for: tuple, oppone
     percent_might_have = (len(might_have) / total_card_count) * 100
     percent_unknown = (len(unknown) / total_card_count) * 100
     percent_does_not_have = (len(does_not_have) / total_card_count) * 100
-    logger.info(
+    logger.debug(
         'Computer Turn - Does Have: {:.0f}%, Might Have: {:.0f}%, Unknown: {:.0f}%, Does Not Have: {:.0f}%'
             .format(percent_does_have, percent_might_have, percent_unknown, percent_does_not_have))
     if len(have) > 0:

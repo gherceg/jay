@@ -118,6 +118,7 @@ class Game:
         self.update_state_for_declaration(declaration)
 
         self.up_next = self.determine_player_up_next_after_declaration(player_who_declared, outcome)
+        logger.info(f'{self.up_next} is up next')
 
     def update_state_for_declaration(self, declaration: Declaration):
         # update game's state
@@ -228,7 +229,8 @@ class Game:
     def determine_player_up_next_after_declaration(self, player: PlayerInterface, outcome: bool) -> Optional[str]:
         eligible_opponents = self.get_opponents_in_play(player)
         eligible_teammates = self.get_teammates_in_play(player)
-
+        logger.info(
+            f'Determining player up next after declaration\nEligible teammates: {map(lambda p: p.name, eligible_teammates)}\nEligible opponents: {map(lambda p: p.name, eligible_opponents)}')
         if outcome:
             if player.in_play:
                 return Optional(player.name)
