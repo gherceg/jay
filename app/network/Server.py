@@ -121,4 +121,4 @@ class Server(NetworkDelegate):
             websocket = self.clients[name]
             await websocket.send_json(contents)
         else:
-            logger.warning('Could not faind {0} in client dict'.format(name))
+            logger.warning('Could not find {0} in client dict'.format(name))
