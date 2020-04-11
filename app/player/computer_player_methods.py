@@ -1,4 +1,5 @@
 import logging
+import random
 from pandas import DataFrame
 
 from app.player import PlayerInterface, state_methods
@@ -25,7 +26,7 @@ def generate_turn(player: PlayerInterface, eligible_player_names: tuple) -> dict
 
     # could not declare, so ask a question
     eligible_cards = util_methods.eligible_cards(player.get_cards())
-    card, player_to_ask = state_methods.get_eligible_question_pair(player.state, eligible_cards, eligible_player_names)
+    card, player_to_ask = get_eligible_question_pair(player.state, eligible_cards, eligible_player_names)
     if card is not None and player_to_ask is not None:
         logger.info(f'{player.name} is asking {player_to_ask} for the {card}')
         return question_dict(player.name, player_to_ask, card)
@@ -38,7 +39,7 @@ def attempt_to_declare(player: PlayerInterface) -> dict:
     set_to_declare = None
     highest_score = -1
     for card_set in CardSet:
-        score_for_set = state_methods.score_declaration_for_set(player.state, team_players, card_set)
+        score_for_set = score_declaration_for_set(player.state, team_players, card_set)
         if score_for_set > highest_score:
             set_to_declare = card_set
 
@@ -67,6 +68,57 @@ def attempt_to_declare(player: PlayerInterface) -> dict:
         declared_map.append(pair)
 
     return declaration_dict(player.name, set_to_declare, tuple(declared_map))
+
+
+def score_declaration_for_set(state: DataFrame, team: tuple, card_set: CardSet) -> int:
+    accumulated_score = 1
+    for card in card_set.value:
+        team_rows = state.loc[card, list(team)]
+        team_has_card = team_rows[team_rows == CardStatus.DOES_HAVE]
+        if len(team_has_card) == 0:
+            team_might_have_card = team_rows[team_rows == CardStatus.MIGHT_HAVE]
+            if len(team_might_have_card) == 0:
+                team_unknown = team_rows[team_rows == CardStatus.UNKNOWN]
+                if len(team_unknown) == 0:
+                    accumulated_score *= 0
+                else:
+                    accumulated_score *= 1
+            else:
+                accumulated_score *= 2
+        else:
+            accumulated_score *= 3
+
+    return accumulated_score
+
+
+def get_eligible_question_pair(state: DataFrame, cards_to_ask_for: tuple, opponents: tuple) -> (str, str):
+    opponents_df = state.loc[list(cards_to_ask_for), list(opponents)]
+
+    have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_HAVE]
+    have = list(have_df[have_df.notnull()].stack().index)
+
+    might_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.MIGHT_HAVE]
+    might_have = list(might_have_df[might_have_df.notnull()].stack().index)
+
+    unknown_df = opponents_df[opponents_df[list(opponents)] == CardStatus.UNKNOWN]
+    unknown = list(unknown_df[unknown_df.notnull()].stack().index)
+
+    does_not_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_NOT_HAVE]
+    does_not_have = list(does_not_have_df[does_not_have_df.notnull()].stack().index)
+
+    logger.info(
+        f'Computer Turn\nDoes Have: {len(have)}\nMight Have: {len(might_have)}\nUnknown: {len(unknown)}\nDoes Not Have: {len(does_not_have)}')
+    if len(have) > 0:
+        return random.choice(have)
+    elif len(might_have) > 0:
+        return random.choice(might_have)
+    elif len(unknown) > 0:
+        return random.choice(unknown)
+    elif len(does_not_have) > 0:
+        return None, None
+    else:
+        logger.info(state)
+        raise Exception('No options left')
 
 
 def declaration_dict(name: str, card_set: CardSet, declared_map: tuple) -> dict:

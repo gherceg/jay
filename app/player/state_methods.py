@@ -106,52 +106,6 @@ def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optiona
     return Optional(tuple(declared_map))
 
 
-def score_declaration_for_set(state: DataFrame, team: tuple, card_set: CardSet) -> int:
-    accumulated_score = 1
-    for card in card_set.value:
-        team_rows = state.loc[card, list(team)]
-        team_has_card = team_rows[team_rows == CardStatus.DOES_HAVE]
-        if len(team_has_card) == 0:
-            team_might_have_card = team_rows[team_rows == CardStatus.MIGHT_HAVE]
-            if len(team_might_have_card) == 0:
-                team_unknown = team_rows[team_rows == CardStatus.UNKNOWN]
-                if len(team_unknown) == 0:
-                    accumulated_score *= 0
-                else:
-                    accumulated_score *= 1
-            else:
-                accumulated_score *= 2
-        else:
-            accumulated_score *= 3
-
-    return accumulated_score
 
 
-def get_eligible_question_pair(state: DataFrame, cards_to_ask_for: tuple, opponents: tuple) -> (str, str):
-    opponents_df = state.loc[list(cards_to_ask_for), list(opponents)]
 
-    have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_HAVE]
-    have = list(have_df[have_df.notnull()].stack().index)
-
-    might_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.MIGHT_HAVE]
-    might_have = list(might_have_df[might_have_df.notnull()].stack().index)
-
-    unknown_df = opponents_df[opponents_df[list(opponents)] == CardStatus.UNKNOWN]
-    unknown = list(unknown_df[unknown_df.notnull()].stack().index)
-
-    does_not_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_NOT_HAVE]
-    does_not_have = list(does_not_have_df[does_not_have_df.notnull()].stack().index)
-
-    logger.info(
-        f'Computer Turn\nDoes Have: {len(have)}\nMight Have: {len(might_have)}\nUnknown: {len(unknown)}\nDoes Not Have: {len(does_not_have)}')
-    if len(have) > 0:
-        return random.choice(have)
-    elif len(might_have) > 0:
-        return random.choice(might_have)
-    elif len(unknown) > 0:
-        return random.choice(unknown)
-    elif len(does_not_have) > 0:
-        return None, None
-    else:
-        logger.info(state)
-        raise Exception('No options left')

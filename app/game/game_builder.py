@@ -29,8 +29,7 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
     game = Game(pin, network_delegate, players, teams, settings[VIRTUAL_DECK])
 
     player = get_first_turn(players)
-    # game.set_player_to_start(player)
-    game.set_player_to_start('Player 0')
+    game.set_player_to_start(player)
     return game
 
 
@@ -107,6 +106,8 @@ def generate_teams(players: list) -> list:
 def get_first_turn(players: tuple) -> str:
     player_names = []
     for player in players:
-        player_names.append(player.name)
+        #TODO not capable of starting game with computer player yet
+        if player.player_type == NETWORK_PLAYER:
+            player_names.append(player.name)
 
     return random.choice(player_names)

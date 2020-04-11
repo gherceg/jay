@@ -43,14 +43,8 @@ class Game:
 
         self.setup_state()
 
-    def setup_state(self):
-        self.state = state_methods.create_default_state(tuple(self.players.keys()))
-
-        for (name, player) in self.players.items():
-            cards = player.get_cards()
-            self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
-
     async def handle_declaration(self, player: str, card_set: CardSet, declared_list: list):
+        """Determines declaration outcome, updates game, requests to send up via delegate"""
         self.update_game_for_declaration(player, card_set, tuple(declared_list))
         logger.info(self.state)
         await self.send_game_update()
@@ -62,6 +56,7 @@ class Game:
             await asyncio.sleep(COMPUTER_WAIT_TIME)
 
     async def handle_question(self, questioner: str, respondent: str, card: str):
+        """Determines question outcome, updates game, requests to send up via delegate"""
         self.update_game_for_question(questioner, respondent, card)
         await self.send_game_update()
 
@@ -70,20 +65,6 @@ class Game:
             await self.automate_turn(player_up_next)
             player_up_next = self.players[self.up_next]
             await asyncio.sleep(COMPUTER_WAIT_TIME)
-
-    # DEBBUG Method
-    def verify_cards_left_makes_sense(self):
-        card_count = 0
-        for player in self.players.values():
-            card_count += len(player.get_cards())
-
-        sets_declared = 0
-        for set_count in self.set_counts.values():
-            sets_declared += set_count
-        expected_card_count = 48 - (sets_declared * 6)
-
-        if card_count != expected_card_count:
-            logger.error('Card Count Mismatch!')
 
     async def automate_turn(self, player: PlayerInterface):
         generated_turn: dict = cpm.generate_turn(player, self.get_opponents_names_in_play(player))
@@ -200,6 +181,13 @@ class Game:
 
     # PRIVATE METHODS
 
+    def setup_state(self):
+        self.state = state_methods.create_default_state(tuple(self.players.keys()))
+
+        for (name, player) in self.players.items():
+            cards = player.get_cards()
+            self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
+
     def determine_player_up_next_after_declaration(self, player: PlayerInterface, outcome: bool) -> str:
         eligible_opponents = self.get_opponents_in_play(player)
         player_up_next = player if outcome else random.choice(eligible_opponents)
@@ -212,3 +200,17 @@ class Game:
         if player_name not in self.players.keys():
             raise ValueError(f"Player {player_name} not found in game")
         return self.players[player_name].has_card(card)
+
+    # DEBBUG Method
+    def verify_cards_left_makes_sense(self):
+        card_count = 0
+        for player in self.players.values():
+            card_count += len(player.get_cards())
+
+        sets_declared = 0
+        for set_count in self.set_counts.values():
+            sets_declared += set_count
+        expected_card_count = 48 - (sets_declared * 6)
+
+        if card_count != expected_card_count:
+            logger.error('Card Count Mismatch!')
