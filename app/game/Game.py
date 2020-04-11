@@ -58,7 +58,6 @@ class Game:
         while player_up_next.is_present() and player_up_next.get().player_type == COMPUTER_PLAYER:
             await self.automate_turn(player_up_next.get())
             player_up_next = self.get_player_up_next()
-            await asyncio.sleep(COMPUTER_WAIT_TIME)
 
     async def handle_question(self, questioner: str, respondent: str, card: str):
         """Determines question outcome, updates game, requests to send up via delegate"""
@@ -69,9 +68,9 @@ class Game:
         while player_up_next.is_present() and player_up_next.get().player_type == COMPUTER_PLAYER:
             await self.automate_turn(player_up_next.get())
             player_up_next = self.get_player_up_next()
-            await asyncio.sleep(COMPUTER_WAIT_TIME)
 
     async def automate_turn(self, player: PlayerInterface):
+        await asyncio.sleep(COMPUTER_WAIT_TIME)
         generated_turn: dict = cpm.generate_turn(player, self.get_opponents_names_in_play(player))
         error = game_validation.validate_question(self, generated_turn)
         if error.is_present() and generated_turn[TURN_TYPE] != DECLARATION:
