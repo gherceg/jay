@@ -174,6 +174,9 @@ class Game:
     def get_player_cards(self, player: str) -> tuple:
         return state_methods.get_cards_for_player(self.state, player)
 
+    def get_player_type(self, player: str) -> str:
+        return self.players[player].player_type
+
     def get_player_card_count(self, player: str) -> int:
         return len(self.get_player_cards(player))
 

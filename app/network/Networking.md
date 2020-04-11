@@ -76,6 +76,7 @@ Card Sets are defined as follows:
                 {'name':name of team, 
                 'players': [{
                     'name': name of player,
+                    'type': player type
                     'card_count': number of cards,
                 }],
                 'set_count': number of sets
@@ -91,6 +92,7 @@ Card Sets are defined as follows:
                 {'name':name of team, 
                 'players': [{
                     'name': name of player,
+                    'type': player type
                     'card_count': number of cards,
                 }],
                 'set_count': number of sets

@@ -69,6 +69,7 @@ def formatted_teams(game: Game) -> list:
         for player in players:
             player_data = {
                 NAME: player,
+                TYPE: game.get_player_type(player),
                 CARD_COUNT: game.get_player_card_count(player)
             }
             team_players.append(player_data)
