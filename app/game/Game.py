@@ -1,4 +1,5 @@
 import logging
+from pandas import DataFrame
 import random
 import asyncio
 
@@ -17,20 +18,24 @@ class Game:
 
     def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
         self.network_delegate = network_delegate
-        self.pin = pin
-        self.ledger = []
-        self.up_next = None
-        self.state = None
-        self.virtual_deck = virtual_deck
+        self.pin: int = pin
+        self.ledger: list = []
+        self.up_next: str = None
+        self.state: DataFrame = None
+        self.virtual_deck: bool = virtual_deck
 
         # create a dictionary of players for easy lookup
-        self.players = {}
+        self.players: dict = {}
         for player in players:
             self.players[player.name] = player
 
         self.teams = {}
         for team in teams:
             self.teams[team[NAME]] = team[PLAYERS]
+            # TODO refactor teams to associate team name with player better
+            for player in team[PLAYERS]:
+                player: PlayerInterface = self.players[player]
+                player.team_name = team[NAME]
 
         self.set_counts = {}
         for team in teams:
@@ -66,8 +71,7 @@ class Game:
             await asyncio.sleep(COMPUTER_WAIT_TIME)
 
     async def automate_turn(self, player: PlayerInterface):
-        logger.info(f'{self.up_next} is generating a turn')
-        generated_turn: dict = cpm.generate_turn(player)
+        generated_turn: dict = cpm.generate_turn(player, self.get_eligible_player_names_to_ask(player))
         if generated_turn[TURN_TYPE] == QUESTION:
             turn: Turn = self.update_game_for_question(generated_turn[QUESTIONER], generated_turn[RESPONDENT],
                                                        generated_turn[CARD])
@@ -92,16 +96,17 @@ class Game:
             player.received_next_turn(turn)
         return turn
 
-    def update_game_for_declaration(self, player: str, card_set: CardSet, declared_list: tuple) -> Declaration:
+    def update_game_for_declaration(self, player_name: str, card_set: CardSet, declared_list: tuple) -> Declaration:
         outcome = True
         for card_player_pair in declared_list:
             outcome = self.does_player_have_card(card_player_pair[PLAYER], card_player_pair[CARD]) and outcome
 
         # TODO not the most elegant way to do this
-        team_name = self.get_team_for_player(player) if outcome else self.get_opposing_team_for_player(player)
+        player = self.players[player_name]
+        team_name = player.team_name if outcome else self.get_opposing_team_name_for_player(player_name)
         self.set_counts[team_name] += 1
 
-        declaration: Declaration = Declaration(player, card_set, declared_list, outcome)
+        declaration: Declaration = Declaration(player_name, card_set, declared_list, outcome)
 
         self.state = state_methods.update_state_with_declaration(self.state, declaration)
         self.ledger.append(declaration)
@@ -143,17 +148,26 @@ class Game:
     def get_player_card_count(self, player: str) -> int:
         return len(self.get_player_cards(player))
 
-    def get_team_for_player(self, player: str) -> str:
+    def get_team_name_for_player(self, player: str) -> str:
         for (team_name, players) in self.teams.items():
             if player in players:
                 return team_name
 
         raise Exception('Could not find team for player {0}'.format(player))
 
-    def get_opposing_team_for_player(self, player: str) -> str:
+    #TODO could refactor
+    def get_opposing_team_name_for_player(self, player: str) -> str:
         for (team_name, players) in self.teams.items():
             if player not in players:
                 return team_name
+
+    def get_eligible_player_names_to_ask(self, player: PlayerInterface) -> tuple:
+        eligible_players = []
+        for temp_player in self.players.values():
+            if temp_player.team_name != player.team_name and temp_player.in_play:
+                eligible_players.append(temp_player.name)
+
+        return tuple(eligible_players)
 
     # PRIVATE METHODS
 

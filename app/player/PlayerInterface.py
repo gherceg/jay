@@ -16,6 +16,9 @@ class PlayerInterface:
         self.teammates: tuple = teammates
         self.opposing_team: tuple = opposing_team
 
+        # TODO ideally pass this in but teams are horrendous right now and need to be refactored
+        self.team_name = None
+
     def received_next_turn(self, turn: Turn):
         self.state = state_methods.update_state_with_turn(self.state, turn)
 
@@ -28,6 +31,10 @@ class PlayerInterface:
 
     def has_card(self, card: str) -> bool:
         return card in self.get_cards()
+
+    @property
+    def in_play(self) -> bool:
+        return len(self.get_cards()) > 0
 
     def get_cards(self) -> tuple:
         return state_methods.get_cards_for_player(self.state, self.name)

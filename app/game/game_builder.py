@@ -10,6 +10,7 @@ from app.constants import *
 
 logger = logging.getLogger(__name__)
 
+
 def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
     """Given a dictionary containing game settings, setup a new game and create the players"""
 

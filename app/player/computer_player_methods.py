@@ -9,10 +9,8 @@ from app.constants import *
 logger = logging.getLogger(__name__)
 
 
-
-
-
-def generate_turn(player: PlayerInterface) -> dict:
+def generate_turn(player: PlayerInterface, eligible_player_names: tuple) -> dict:
+    logger.info(f'{player.name} is generating a turn. Considering asking {eligible_player_names}')
     # first check if computer knows where all of the cards of a certain set are
     team_players = (player.name,) + player.teammates
     for card_set in CardSet:
@@ -23,7 +21,7 @@ def generate_turn(player: PlayerInterface) -> dict:
 
     # could not declare, so ask a question
     sets = util_methods.eligible_sets(player.get_cards())
-    card, player_to_ask = state_methods.get_eligible_question_pair(player.state, sets, player.opposing_team)
+    card, player_to_ask = state_methods.get_eligible_question_pair(player.state, sets, eligible_player_names)
     logger.info(f'{player.name} is asking {player_to_ask} for the {card}')
     return question_dict(player.name, player_to_ask, card)
 

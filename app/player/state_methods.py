@@ -57,8 +57,10 @@ def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
                                                                       turn.questioner,
                                                                       CardStatus.UNKNOWN,
                                                                       CardStatus.MIGHT_HAVE)
-    
-    #TODO use process of elimination to set value to DOES_HAVE if rest of players are DOES_NOT_HAVE
+
+    # TODO use process of elimination to set value to DOES_HAVE if rest of players are DOES_NOT_HAVE
+    # for card in util_methods.deck_of_cards():
+    #     state = process_of_elimination(state, card)
     return state
 
 
@@ -66,6 +68,18 @@ def update_state_with_declaration(state: DataFrame, declaration: Declaration) ->
     for player_card_pair in declaration.declared_list:
         state.loc[player_card_pair[CARD], :] = CardStatus.DECLARED
 
+    return state
+
+
+def process_of_elimination(state: DataFrame, row: str) -> DataFrame:
+    status_for_card = state.loc[row, :]
+    does_not_have_count = len(status_for_card.where(status_for_card == CardStatus.DOES_NOT_HAVE).dropna())
+    leftover_columns = status_for_card.where(status_for_card != CardStatus.DOES_NOT_HAVE).dropna()
+    if does_not_have_count == len(state.columns) - 1 and leftover_columns[0] != CardStatus.DOES_HAVE:
+        if len(leftover_columns) != 1:
+            raise Exception('Should not be possible')
+        column_to_update = leftover_columns.index[0]
+        state = data_frame_methods.update_rows_to_value_for_column(state, (row,), column_to_update, CardStatus.DOES_HAVE)
     return state
 
 
@@ -115,7 +129,8 @@ def get_eligible_question_pair(state: DataFrame, sets: tuple, opponents: tuple) 
         unknown = unknown + unknown_for_set
         does_not_have = does_not_have + does_not_have_for_set
 
-    logger.info(f'Computer Turn\nDoes Have: {len(have)}\nMight Have: {len(might_have)}\nUnknown: {len(unknown)}\nDoes Not Have: {len(does_not_have)}')
+    logger.info(
+        f'Computer Turn\nDoes Have: {len(have)}\nMight Have: {len(might_have)}\nUnknown: {len(unknown)}\nDoes Not Have: {len(does_not_have)}')
     if len(have) > 0:
         return random.choice(have)
     elif len(might_have) > 0:
@@ -125,7 +140,5 @@ def get_eligible_question_pair(state: DataFrame, sets: tuple, opponents: tuple) 
     elif len(does_not_have) > 0:
         return random.choice(does_not_have)
     else:
+        logger.info(state)
         raise Exception('Could not find any cards to ask for. Should never happen')
-
-
-
