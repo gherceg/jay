@@ -59,8 +59,8 @@ def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
                                                                       CardStatus.MIGHT_HAVE)
 
     # TODO use process of elimination to set value to DOES_HAVE if rest of players are DOES_NOT_HAVE
-    # for card in util_methods.deck_of_cards():
-    #     state = process_of_elimination(state, card)
+    for card in util_methods.deck_of_cards():
+        state = process_of_elimination(state, card)
     return state
 
 
@@ -79,7 +79,8 @@ def process_of_elimination(state: DataFrame, row: str) -> DataFrame:
         if len(leftover_columns) != 1:
             raise Exception('Should not be possible')
         column_to_update = leftover_columns.index[0]
-        state = data_frame_methods.update_rows_to_value_for_column(state, (row,), column_to_update, CardStatus.DOES_HAVE)
+        state = data_frame_methods.update_rows_to_value_for_column(state, (row,), column_to_update,
+                                                                   CardStatus.DOES_HAVE)
     return state
 
 
@@ -105,29 +106,41 @@ def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optiona
     return Optional(tuple(declared_map))
 
 
-def get_eligible_question_pair(state: DataFrame, sets: tuple, opponents: tuple) -> (str, str):
-    have = []
-    might_have = []
-    unknown = []
-    does_not_have = []
-    for card_set in sets:
-        opponents_df = state.loc[list(card_set.value), list(opponents)]
-        have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_HAVE]
-        have_for_set = list(have_df[have_df.notnull()].stack().index)
+def score_declaration_for_set(state: DataFrame, team: tuple, card_set: CardSet) -> int:
+    accumulated_score = 1
+    for card in card_set.value:
+        team_rows = state.loc[card, list(team)]
+        team_has_card = team_rows[team_rows == CardStatus.DOES_HAVE]
+        if len(team_has_card) == 0:
+            team_might_have_card = team_rows[team_rows == CardStatus.MIGHT_HAVE]
+            if len(team_might_have_card) == 0:
+                team_unknown = team_rows[team_rows == CardStatus.UNKNOWN]
+                if len(team_unknown) == 0:
+                    accumulated_score *= 0
+                else:
+                    accumulated_score *= 1
+            else:
+                accumulated_score *= 2
+        else:
+            accumulated_score *= 3
 
-        might_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.MIGHT_HAVE]
-        might_have_for_set = list(might_have_df[might_have_df.notnull()].stack().index)
+    return accumulated_score
 
-        unknown_df = opponents_df[opponents_df[list(opponents)] == CardStatus.UNKNOWN]
-        unknown_for_set = list(unknown_df[unknown_df.notnull()].stack().index)
 
-        does_not_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_NOT_HAVE]
-        does_not_have_for_set = list(does_not_have_df[does_not_have_df.notnull()].stack().index)
+def get_eligible_question_pair(state: DataFrame, cards_to_ask_for: tuple, opponents: tuple) -> (str, str):
+    opponents_df = state.loc[list(cards_to_ask_for), list(opponents)]
 
-        have = have + have_for_set
-        might_have = might_have + might_have_for_set
-        unknown = unknown + unknown_for_set
-        does_not_have = does_not_have + does_not_have_for_set
+    have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_HAVE]
+    have = list(have_df[have_df.notnull()].stack().index)
+
+    might_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.MIGHT_HAVE]
+    might_have = list(might_have_df[might_have_df.notnull()].stack().index)
+
+    unknown_df = opponents_df[opponents_df[list(opponents)] == CardStatus.UNKNOWN]
+    unknown = list(unknown_df[unknown_df.notnull()].stack().index)
+
+    does_not_have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_NOT_HAVE]
+    does_not_have = list(does_not_have_df[does_not_have_df.notnull()].stack().index)
 
     logger.info(
         f'Computer Turn\nDoes Have: {len(have)}\nMight Have: {len(might_have)}\nUnknown: {len(unknown)}\nDoes Not Have: {len(does_not_have)}')
@@ -138,7 +151,7 @@ def get_eligible_question_pair(state: DataFrame, sets: tuple, opponents: tuple) 
     elif len(unknown) > 0:
         return random.choice(unknown)
     elif len(does_not_have) > 0:
-        return random.choice(does_not_have)
+        return None, None
     else:
         logger.info(state)
-        raise Exception('Could not find any cards to ask for. Should never happen')
+        raise Exception('No options left')

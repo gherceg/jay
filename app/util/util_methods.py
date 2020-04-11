@@ -13,6 +13,15 @@ def eligible_sets(cards: tuple) -> tuple:
     return tuple(sets)
 
 
+def eligible_cards(cards: tuple) -> tuple:
+    sets = eligible_sets(cards)
+    all_cards_for_sets = set()
+    for card_set in sets:
+        all_cards_for_sets.update(card_set.value)
+
+    return tuple(all_cards_for_sets.symmetric_difference(cards))
+
+
 def set_for_card(card) -> CardSet:
     for card_set in CardSet:
         if card in card_set.value:

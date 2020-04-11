@@ -8,7 +8,7 @@ from app.player import PlayerInterface, state_methods, computer_player_methods a
 from app.network import NetworkDelegate
 from app.constants import *
 from app.util import Optional
-from app.game import game_messages
+from app.game import game_messages, game_validation
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ class Game:
 
     async def handle_declaration(self, player: str, card_set: CardSet, declared_list: list):
         declaration: Declaration = self.update_game_for_declaration(player, card_set, tuple(declared_list))
+        logger.info(self.state)
         await self.send_declaration_update(declaration)
 
         player_up_next = self.players[self.up_next]
@@ -70,8 +71,28 @@ class Game:
             player_up_next = self.players[self.up_next]
             await asyncio.sleep(COMPUTER_WAIT_TIME)
 
+    #DEBBUG Method
+    def verify_cards_left_makes_sense(self):
+        card_count = 0
+        for player in self.players.values():
+            card_count += len(player.get_cards())
+
+        sets_declared = 0
+        for set_count in self.set_counts.values():
+            sets_declared += set_count
+        expected_card_count = 48 - (sets_declared * 6)
+
+        if card_count != expected_card_count:
+            logger.error('Card Count Mismatch!')
+
     async def automate_turn(self, player: PlayerInterface):
-        generated_turn: dict = cpm.generate_turn(player, self.get_eligible_player_names_to_ask(player))
+        generated_turn: dict = cpm.generate_turn(player, self.get_opponents_names_in_play(player))
+        error = game_validation.validate_question(self, generated_turn)
+        if error.is_present() and generated_turn[TURN_TYPE] != DECLARATION:
+            logger.error(f'Computer {player.name} is asking invalid question: {error.get()}\nHas {player.get_cards()}\n{player.state}')
+
+        self.verify_cards_left_makes_sense()
+
         if generated_turn[TURN_TYPE] == QUESTION:
             turn: Turn = self.update_game_for_question(generated_turn[QUESTIONER], generated_turn[RESPONDENT],
                                                        generated_turn[CARD])
@@ -102,8 +123,8 @@ class Game:
             outcome = self.does_player_have_card(card_player_pair[PLAYER], card_player_pair[CARD]) and outcome
 
         # TODO not the most elegant way to do this
-        player = self.players[player_name]
-        team_name = player.team_name if outcome else self.get_opposing_team_name_for_player(player_name)
+        player_who_declared = self.players[player_name]
+        team_name = player_who_declared.team_name if outcome else self.get_opposing_team_name_for_player(player_name)
         self.set_counts[team_name] += 1
 
         declaration: Declaration = Declaration(player_name, card_set, declared_list, outcome)
@@ -112,6 +133,8 @@ class Game:
         self.ledger.append(declaration)
         for key, player in self.players.items():
             player.received_declaration(declaration)
+
+        self.up_next = self.determine_player_up_next_after_declaration(player_who_declared, outcome)
         return declaration
 
     async def send_question_update(self, turn):
@@ -155,13 +178,13 @@ class Game:
 
         raise Exception('Could not find team for player {0}'.format(player))
 
-    #TODO could refactor
+    # TODO could refactor
     def get_opposing_team_name_for_player(self, player: str) -> str:
         for (team_name, players) in self.teams.items():
             if player not in players:
                 return team_name
 
-    def get_eligible_player_names_to_ask(self, player: PlayerInterface) -> tuple:
+    def get_opponents_names_in_play(self, player: PlayerInterface) -> tuple:
         eligible_players = []
         for temp_player in self.players.values():
             if temp_player.team_name != player.team_name and temp_player.in_play:
@@ -169,11 +192,31 @@ class Game:
 
         return tuple(eligible_players)
 
+    def get_opponents_in_play(self, player: PlayerInterface) -> tuple:
+        eligible_players = []
+        for temp_player in self.players.values():
+            if temp_player.team_name != player.team_name and temp_player.in_play:
+                eligible_players.append(temp_player)
+
+        return tuple(eligible_players)
+
+    def get_teammates_in_play(self, player: PlayerInterface) -> tuple:
+        eligible_players = []
+        for temp_player in self.players.values():
+            if temp_player.team_name != player.team_name and temp_player.in_play:
+                eligible_players.append(temp_player)
+
+        return tuple(eligible_players)
+
     # PRIVATE METHODS
 
-    def determine_player_up_next(self, player: str, outcome: bool) -> str:
-        # TODO: should keep track of those still in play
-        pass
+    def determine_player_up_next_after_declaration(self, player: PlayerInterface, outcome: bool) -> str:
+        eligible_opponents = self.get_opponents_in_play(player)
+        player_up_next = player if outcome else random.choice(eligible_opponents)
+        if not player_up_next.in_play:
+            teammates = self.get_teammates_in_play(player_up_next)
+            player_up_next = random.choice(self.get_teammates_in_play(player_up_next))
+        return player_up_next.name
 
     def does_player_have_card(self, player_name: str, card: str):
         if player_name not in self.players.keys():
