@@ -30,7 +30,7 @@ class PlayerInterface:
         self.state = state_methods.check_for_process_of_elimination(self.state)
 
     def set_initial_cards(self, cards: tuple):
-        logger.info('Setting initial cards for {0}: {1}'.format(self.name, cards))
+        logger.debug('Setting initial cards for {0}: {1}'.format(self.name, cards))
         self.state = state_methods.update_state_upon_receiving_cards(self.state, self.name, cards)
 
     def has_card(self, card: str) -> bool:

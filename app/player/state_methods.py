@@ -88,7 +88,7 @@ def process_of_elimination(state: DataFrame, row: str) -> DataFrame:
     status_for_card = state.loc[row, :]
     does_not_have_count = len(status_for_card.where(status_for_card == CardStatus.DOES_NOT_HAVE).dropna())
     leftover_columns = status_for_card.where(status_for_card != CardStatus.DOES_NOT_HAVE).dropna()
-    if does_not_have_count == len(state.columns) - 1 and leftover_columns[0] != CardStatus.DOES_HAVE:
+    if does_not_have_count == len(state.columns) - 1 and (leftover_columns[0] != CardStatus.DOES_HAVE and leftover_columns[0] != CardStatus.DECLARED):
         if len(leftover_columns) != 1:
             raise Exception('Should not be possible')
         column_to_update = leftover_columns.index[0]

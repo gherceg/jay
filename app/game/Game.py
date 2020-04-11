@@ -46,7 +46,6 @@ class Game:
     async def handle_declaration(self, player: str, card_set: CardSet, declared_list: list):
         """Determines declaration outcome, updates game, requests to send up via delegate"""
         self.update_game_for_declaration(player, card_set, tuple(declared_list))
-        logger.info(self.state)
         await self.send_game_update()
 
         if self.up_next.is_empty():
@@ -118,7 +117,8 @@ class Game:
         self.update_state_for_declaration(declaration)
 
         self.up_next = self.determine_player_up_next_after_declaration(player_who_declared, outcome)
-        logger.info(f'{self.up_next} is up next')
+        if self.up_next.is_present():
+            logger.info(f'{self.up_next.get()} is up next')
 
     def update_state_for_declaration(self, declaration: Declaration):
         # update game's state
@@ -144,16 +144,16 @@ class Game:
     async def send_end_game(self):
         for key, player in self.players.items():
             if player.player_type == NETWORK_PLAYER:
-                await self.broadcast_end_game()
+                await self.broadcast_end_game(player.naem)
 
     # Network Methods
     async def broadcast_turn(self, player: PlayerInterface):
         contents = game_messages.game_update(self, player)
         await self.network_delegate.broadcast_message(player.name, contents)
 
-    async def broadcast_end_game(self):
+    async def broadcast_end_game(self, name: str):
         contents = game_messages.end_game(self)
-        await self.network_delegate.broadcast_message(contents)
+        await self.network_delegate.broadcast_message(name, contents)
 
     # Set Methods
     def set_player_to_start(self, player: str):
@@ -212,7 +212,7 @@ class Game:
     def get_teammates_in_play(self, player: PlayerInterface) -> tuple:
         eligible_players = []
         for temp_player in self.players.values():
-            if temp_player.team_name != player.team_name and temp_player.in_play:
+            if temp_player.team_name == player.team_name and temp_player.in_play:
                 eligible_players.append(temp_player)
 
         return tuple(eligible_players)
@@ -229,8 +229,11 @@ class Game:
     def determine_player_up_next_after_declaration(self, player: PlayerInterface, outcome: bool) -> Optional[str]:
         eligible_opponents = self.get_opponents_in_play(player)
         eligible_teammates = self.get_teammates_in_play(player)
+        eligible_teammate_names = map(lambda p: p.name, eligible_teammates)
+        eligible_opponent_names = map(lambda p: p.name, eligible_opponents)
+
         logger.info(
-            f'Determining player up next after declaration\nEligible teammates: {map(lambda p: p.name, eligible_teammates)}\nEligible opponents: {map(lambda p: p.name, eligible_opponents)}')
+            f'Determining player up next after {"successful" if outcome else "failed"} declaration\nPlayer in play: {player.in_play}\nEligible teammates: {list(eligible_teammate_names)}\nEligible opponents: {list(eligible_opponent_names)}')
         if outcome:
             if player.in_play:
                 return Optional(player.name)
@@ -246,12 +249,12 @@ class Game:
                 raise Exception('Everyone is out but the game is not over.')
         else:
             if len(eligible_opponents) > 0:
-                opponent = random.choice(eligible_teammates)
+                opponent = random.choice(eligible_opponents)
                 return Optional(opponent.name)
             elif player.in_play:
                 return Optional(player.name)
             elif len(eligible_teammates) > 0:
-                teammate = random.choice(eligible_opponents)
+                teammate = random.choice(eligible_teammates)
                 return Optional(teammate.name)
             elif self.game_is_over():
                 return Optional.empty()
