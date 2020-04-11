@@ -51,9 +51,9 @@ class Game:
             self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
 
     async def handle_declaration(self, player: str, card_set: CardSet, declared_list: list):
-        declaration: Declaration = self.update_game_for_declaration(player, card_set, tuple(declared_list))
+        self.update_game_for_declaration(player, card_set, tuple(declared_list))
         logger.info(self.state)
-        await self.send_declaration_update(declaration)
+        await self.send_game_update()
 
         player_up_next = self.players[self.up_next]
         while player_up_next.player_type == COMPUTER_PLAYER:
@@ -62,8 +62,8 @@ class Game:
             await asyncio.sleep(COMPUTER_WAIT_TIME)
 
     async def handle_question(self, questioner: str, respondent: str, card: str):
-        turn: Turn = self.update_game_for_question(questioner, respondent, card)
-        await self.send_question_update(turn)
+        self.update_game_for_question(questioner, respondent, card)
+        await self.send_game_update()
 
         player_up_next = self.players[self.up_next]
         while player_up_next.player_type == COMPUTER_PLAYER:
@@ -71,7 +71,7 @@ class Game:
             player_up_next = self.players[self.up_next]
             await asyncio.sleep(COMPUTER_WAIT_TIME)
 
-    #DEBBUG Method
+    # DEBBUG Method
     def verify_cards_left_makes_sense(self):
         card_count = 0
         for player in self.players.values():
@@ -89,23 +89,24 @@ class Game:
         generated_turn: dict = cpm.generate_turn(player, self.get_opponents_names_in_play(player))
         error = game_validation.validate_question(self, generated_turn)
         if error.is_present() and generated_turn[TURN_TYPE] != DECLARATION:
-            logger.error(f'Computer {player.name} is asking invalid question: {error.get()}\nHas {player.get_cards()}\n{player.state}')
+            logger.error(
+                f'Computer {player.name} is asking invalid question: {error.get()}\nHas {player.get_cards()}\n{player.state}')
 
         self.verify_cards_left_makes_sense()
 
-        if generated_turn[TURN_TYPE] == QUESTION:
-            turn: Turn = self.update_game_for_question(generated_turn[QUESTIONER], generated_turn[RESPONDENT],
-                                                       generated_turn[CARD])
-            await self.send_question_update(turn)
-        elif generated_turn[TURN_TYPE] == DECLARATION:
-            declaration: Declaration = self.update_game_for_declaration(generated_turn[NAME],
-                                                                        generated_turn[CARD_SET],
-                                                                        generated_turn[DECLARED_MAP])
-            await self.send_declaration_update(declaration)
-        else:
-            logging.error(f'Returned dictionary turn type value is {generated_turn[TURN_TYPE]}')
+        if generated_turn[TURN_TYPE] != QUESTION and generated_turn[TURN_TYPE] != DECLARATION:
+            raise Exception(f'Generated turn of type {generated_turn[TURN_TYPE]}')
 
-    def update_game_for_question(self, questioner: str, respondent: str, card: str) -> Turn:
+        if generated_turn[TURN_TYPE] == QUESTION:
+            self.update_game_for_question(generated_turn[QUESTIONER], generated_turn[RESPONDENT],
+                                          generated_turn[CARD])
+        else:
+            self.update_game_for_declaration(generated_turn[NAME],
+                                             generated_turn[CARD_SET],
+                                             generated_turn[DECLARED_MAP])
+        await self.send_game_update()
+
+    def update_game_for_question(self, questioner: str, respondent: str, card: str):
         outcome = self.does_player_have_card(respondent, card)
         logger.info(
             f'Updating game for question: {questioner} asking {respondent} for the {card}. Outcome is {outcome}')
@@ -115,9 +116,8 @@ class Game:
         self.ledger.append(turn)
         for key, player in self.players.items():
             player.received_next_turn(turn)
-        return turn
 
-    def update_game_for_declaration(self, player_name: str, card_set: CardSet, declared_list: tuple) -> Declaration:
+    def update_game_for_declaration(self, player_name: str, card_set: CardSet, declared_list: tuple):
         outcome = True
         for card_player_pair in declared_list:
             outcome = self.does_player_have_card(card_player_pair[PLAYER], card_player_pair[CARD]) and outcome
@@ -135,25 +135,15 @@ class Game:
             player.received_declaration(declaration)
 
         self.up_next = self.determine_player_up_next_after_declaration(player_who_declared, outcome)
-        return declaration
 
-    async def send_question_update(self, turn):
+    async def send_game_update(self):
         for key, player in self.players.items():
             if player.player_type == NETWORK_PLAYER:
-                await self.broadcast_turn(player, turn)
-
-    async def send_declaration_update(self, declaration: Declaration):
-        for key, player in self.players.items():
-            if player.player_type == NETWORK_PLAYER:
-                await self.broadcast_declaration(player, declaration)
+                await self.broadcast_turn(player)
 
     # Network Methods
-    async def broadcast_turn(self, player: PlayerInterface, turn: Turn):
-        contents = game_messages.game_update(self, player, Optional(turn))
-        await self.network_delegate.broadcast_message(player.name, contents)
-
-    async def broadcast_declaration(self, player: PlayerInterface, declaration: Declaration):
-        contents = game_messages.game_update_for_declaration(self, player, declaration)
+    async def broadcast_turn(self, player: PlayerInterface):
+        contents = game_messages.game_update(self, player)
         await self.network_delegate.broadcast_message(player.name, contents)
 
     # Set Methods

@@ -28,8 +28,8 @@ def joined_game(game: Game) -> Dict:
     }
 
 
-def game_update(game: Game, player: PlayerInterface,
-                opt_turn: Optional[Turn] = Optional.empty()) -> Dict:
+def game_update(game: Game, player: PlayerInterface) -> Dict:
+    opt_turn = Optional(game.ledger[-1]) if len(game.ledger) > 0 else Optional.empty()
     contents = {
         MESSAGE_TYPE: GAME_UPDATE,
         DATA: {
@@ -44,29 +44,11 @@ def game_update(game: Game, player: PlayerInterface,
 
     if opt_turn.is_present():
         turn = opt_turn.get()
+        turn_type = TURN if isinstance(turn, Turn) else DECLARATION
         contents[DATA][LAST_TURN] = {
-            TYPE: TURN,
+            TYPE: turn_type,
             DATA: turn.to_dict()
         }
-
-    return contents
-
-
-def game_update_for_declaration(game: Game, player: PlayerInterface, declaration: Declaration) -> Dict:
-    contents = {
-        MESSAGE_TYPE: GAME_UPDATE,
-        DATA: {
-            PLAYER: {
-                NAME: player.name,
-                CARDS: player.get_cards()
-            }, NEXT_TURN: game.up_next,
-            TEAMS_KEY: formatted_teams(game),
-            LAST_TURN: {
-                TYPE: DECLARATION,
-                DATA: declaration.to_dict()
-            }
-        }
-    }
 
     return contents
 
