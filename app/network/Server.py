@@ -1,7 +1,7 @@
 import logging
 import json
 import asyncio
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from typing import Dict
 
 from app.game import game_messages, game_builder, game_validation
@@ -23,11 +23,19 @@ class Server(NetworkDelegate):
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        logger.info('Connected new client {0}'.format(websocket.client))
         self.connections.append(websocket)
 
     def remove(self, websocket: WebSocket):
-        logger.info('Disconnecting client {0}'.format(websocket.client))
+        name_to_remove = None
+        for name, temp_websocket in self.clients.items():
+            if websocket is temp_websocket:
+                name_to_remove = name
+
+        if name_to_remove is not None:
+            del self.clients[name_to_remove]
+        else:
+            logger.info('Client disconnecting is not assigned to a player')
+
         self.connections.remove(websocket)
 
     async def handle_message(self, websocket: WebSocket, message: dict):
@@ -116,9 +124,18 @@ class Server(NetworkDelegate):
 
     # Network Delegate Implementation
     async def broadcast_message(self, name: str, contents: Dict):
-        # TODO: come back to figure out how to register clients
         if name in self.clients.keys():
             websocket = self.clients[name]
-            await websocket.send_json(contents)
+            try:
+                logger.info(f'Websocket {websocket.client} application state {websocket.application_state}.\n')
+                if websocket.application_state == WebSocketState.CONNECTED:
+                    await websocket.send_json(contents)
+                else:
+                    logger.error(f'Websocket {websocket.client} is disconnected. Not sending message')
+            except:
+                # TODO figure out concurrency issue with not receiving disconnect until event loop is idle again
+                #  to avoid broad exception clause, figure out a specific exception to catch.
+                #  The crash is due to starlette.websockets.exceptions.ConnectionClosedOK
+                logger.error('Attempted to send message to disconnected websocket.')
         else:
             logger.warning('Could not find {0} in client dict'.format(name))

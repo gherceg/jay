@@ -144,7 +144,7 @@ class Game:
     async def send_end_game(self):
         for key, player in self.players.items():
             if player.player_type == NETWORK_PLAYER:
-                await self.broadcast_end_game(player.naem)
+                await self.broadcast_end_game(player.name)
 
     # Network Methods
     async def broadcast_turn(self, player: PlayerInterface):
