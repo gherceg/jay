@@ -36,6 +36,7 @@ Card Sets are defined as follows:
 ###Select Player
     { 'type': 'select_player',
      'data': {
+        'pin': pin for game, 
         'name': player name,
         'cards': list of cards (only expected if using a physical deck) 
         }
@@ -44,6 +45,7 @@ Card Sets are defined as follows:
 ###Question
     { 'type': 'question',
       'data': {
+        'pin': game pin
         'questioner': name of player asking question,
         'respondent': name of player being asked a question,
         'card': card in question
@@ -53,6 +55,7 @@ Card Sets are defined as follows:
 ###Declaration
     { 'type': 'declaration',
       'data': {
+        'pin': game pin
         'name': name of player,
         'card_set': set being declared
         'declared_map': [
@@ -72,6 +75,7 @@ Card Sets are defined as follows:
 ###Joined Game
     { 'type': 'joined_game',
       'data': { 
+            'pin': game pin
             'teams': [
                 {'name':name of team, 
                 'players': [{
@@ -88,6 +92,7 @@ Card Sets are defined as follows:
 ###Game Update
     { 'message_type':'game_update',
       'data': {
+        'pin': game pin,
         'teams': [
                 {'name':name of team, 
                 'players': [{

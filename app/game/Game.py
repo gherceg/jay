@@ -5,7 +5,7 @@ import asyncio
 
 from app.game.data import Turn, Declaration, CardSet
 from app.player import PlayerInterface, state_methods, computer_player_methods as cpm
-from app.network import NetworkDelegate
+from app.network import NetworkDelegate, network_methods
 from app.constants import *
 from app.util import Optional
 from app.game import game_messages, game_validation
@@ -149,11 +149,13 @@ class Game:
     # Network Methods
     async def broadcast_turn(self, player: PlayerInterface):
         contents = game_messages.game_update(self, player)
-        await self.network_delegate.broadcast_message(player.name, contents)
+        client_identifier = network_methods.client_identifier(player.name, str(self.pin))
+        await self.network_delegate.broadcast_message(client_identifier, contents)
 
     async def broadcast_end_game(self, name: str):
         contents = game_messages.end_game(self)
-        await self.network_delegate.broadcast_message(name, contents)
+        client_identifier = network_methods.client_identifier(name, str(self.pin))
+        await self.network_delegate.broadcast_message(client_identifier, contents)
 
     # Set Methods
     def set_player_to_start(self, player: str):

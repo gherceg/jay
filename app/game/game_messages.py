@@ -23,6 +23,7 @@ def joined_game(game: Game) -> Dict:
     return {
         MESSAGE_TYPE: JOINED_GAME,
         DATA: {
+            PIN: game.pin,
             TEAMS_KEY: formatted_teams(game)
         }
     }
@@ -33,6 +34,7 @@ def game_update(game: Game, player: PlayerInterface) -> Dict:
     contents = {
         MESSAGE_TYPE: GAME_UPDATE,
         DATA: {
+            PIN: game.pin,
             PLAYER: {
                 NAME: player.name,
                 CARDS: player.get_cards()
