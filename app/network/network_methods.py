@@ -3,7 +3,6 @@ from starlette.websockets import WebSocket
 from typing import Dict
 
 from app.constants import *
-from app.network import Client
 
 logger = logging.getLogger(__name__)
 
@@ -28,5 +27,6 @@ async def send_error(websocket: WebSocket, message: str):
 
 
 async def send_message(websocket: WebSocket, data: Dict):
-    logger.info('Sending {0} message to websocket {1}'.format(data[MESSAGE_TYPE], websocket.client))
+    identifier = websocket_identifier(websocket)
+    logger.info(f'Sending {data[MESSAGE_TYPE]} message to websocket {identifier}')
     await websocket.send_json(data)

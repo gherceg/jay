@@ -2,6 +2,7 @@ import logging
 from pandas import DataFrame
 import random
 import asyncio
+from typing import Dict
 
 from app.game.data import Turn, Declaration, CardSet
 from app.player import PlayerInterface, state_methods, computer_player_methods as cpm
@@ -162,7 +163,29 @@ class Game:
         self.up_next = Optional(player)
         # TODO: if computer, let them know
 
+    def set_cards_for_player(self, player_name: str, cards: tuple):
+        opt_player = self.get_player_for_name(player_name)
+        if opt_player.is_present():
+            opt_player.get().set_initial_cards(cards)
+        else:
+            logger.error(f'Could not find player {player_name} in game {self.pin}')
+
     # Get Methods
+
+    def game_update_for_player(self, player_name: str) -> Optional[Dict]:
+        opt_player = self.get_player_for_name(player_name)
+        if opt_player.is_present():
+            return Optional(game_messages.game_update(self, opt_player.get()))
+        else:
+            return Optional.empty()
+
+    def get_player_for_name(self, name: str) -> Optional[PlayerInterface]:
+        if name in self.players.keys():
+            return Optional(self.players[name])
+        else:
+            logger.error(f'Unable to find player {name} in game {self.pin}')
+            return Optional.empty()
+
     def get_player_up_next(self) -> Optional[PlayerInterface]:
         if self.up_next.is_present():
             player = self.players[self.up_next.get()]

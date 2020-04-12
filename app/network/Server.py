@@ -15,7 +15,6 @@ class Server(NetworkDelegate):
 
     def __init__(self):
         self.clients: Dict[str, Client] = {}
-        # TODO change pin to string
         self.games: Dict[int, Game] = {}
 
     async def connect(self, websocket: WebSocket):
@@ -76,17 +75,17 @@ class Server(NetworkDelegate):
             game = self.games[data[PIN]]
             self.register_client(data[NAME], data[PIN], websocket)
 
-            # TODO do not like this, should not be grabbing reference to player
-            player = game.players[data[NAME]]
+            player_name = data[NAME]
+
             if game.virtual_deck is False:
                 if CARDS in data:
-                    player.set_initial_cards(data[CARDS])
+                    game.set_cards_for_player(player_name, data[CARDS])
                 else:
                     await network_methods.send_error(websocket, 'Select Player Request: Missing cards field')
 
-            data_to_send = game_messages.game_update(game, player)
-
-            await network_methods.send_message(websocket, data_to_send)
+            opt_data_to_send = game.game_update_for_player(player_name)
+            if opt_data_to_send.is_present():
+                await network_methods.send_message(websocket, opt_data_to_send.get())
         else:
             await network_methods.send_error(websocket, 'Select Player Request: Missing fields or incorrect pin')
 
