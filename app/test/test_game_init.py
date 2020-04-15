@@ -1,4 +1,5 @@
 from app import game_builder
+from app.data import Team
 from app.constants import *
 
 
@@ -12,8 +13,7 @@ def test_network_player_setup():
                     {"name": "Alicia", "type": "network"})
     })
 
-    teams = ({"name": "team_one", "players": ["Graham", "Peter", "Mikaela"]},
-             {"name": "team_two", "players": ["Toby", "Rebecca", "Alicia"]})
+    teams = Team("team_one", ("Graham", "Peter", "Mikaela"), 0), Team("team_one", ("Toby", "Rebecca", "Alicia"), 0)
 
     players = game_builder.setup_players(player_info, teams)
 
@@ -31,8 +31,7 @@ def test_computer_player_setup():
                     {"name": "Alicia", "type": "computer"})
     })
 
-    teams = ({"name": "team_one", "players": ["Graham", "Peter", "Mikaela"]},
-             {"name": "team_two", "players": ["Toby", "Rebecca", "Alicia"]})
+    teams = Team("team_one", ("Graham", "Peter", "Mikaela"), 0), Team("team_one", ("Toby", "Rebecca", "Alicia"), 0)
 
     players = game_builder.setup_players(player_info, teams)
 
@@ -50,8 +49,8 @@ def test_player_setup_invalid_type_raises_exception():
                     {"name": "Alicia", "type": "computer"})
     })
 
-    teams = ({"name": "team_one", "players": ["Graham", "Peter", "Mikaela"]},
-             {"name": "team_two", "players": ["Toby", "Rebecca", "Alicia"]})
+    teams = Team("team_one", ("Graham", "Peter", "Mikaela"), 0), Team("team_one", ("Toby", "Rebecca", "Alicia"), 0)
+
     try:
         players = game_builder.setup_players(player_info, teams)
     except ValueError:
@@ -70,15 +69,14 @@ def test_opposing_teams():
                     {"name": "Alicia", "type": "computer"})
     })
 
-    teams = ({"name": "team_one", "players": ["Graham", "Peter", "Mikaela"]},
-             {"name": "team_two", "players": ["Toby", "Rebecca", "Alicia"]})
+    teams = Team("team_one", ("Graham", "Peter", "Mikaela"), 0), Team("team_one", ("Toby", "Rebecca", "Alicia"), 0)
 
     players = game_builder.setup_players(player_info, teams)
 
     for player in players:
-        if player.name in teams[0]['players']:
+        if player.name in teams[0].player_names:
             assert player.opposing_team == ("Toby", "Rebecca", "Alicia")
-        elif player.name in teams[1]['players']:
+        elif player.name in teams[1].player_names:
             assert player.opposing_team == ("Graham", "Peter", "Mikaela")
         else:
             assert False
@@ -94,8 +92,7 @@ def test_teammates():
                     {"name": "Alicia", "type": "computer"})
     })
 
-    teams = ({"name": "team_one", "players": ["Graham", "Peter", "Mikaela"]},
-             {"name": "team_two", "players": ["Toby", "Rebecca", "Alicia"]})
+    teams = Team("team_one", ("Graham", "Peter", "Mikaela"), 0), Team("team_one", ("Toby", "Rebecca", "Alicia"), 0)
 
     players = game_builder.setup_players(player_info, teams)
 
@@ -118,6 +115,6 @@ def test_setup_teams():
 
     teams = game_builder.setup_teams(settings)
 
-    assert set(teams[0]['players']).isdisjoint(teams[1]['players'])
-    assert len(teams[0]['players']) == 3
-    assert len(teams[1]['players']) == 3
+    assert set(teams[0].player_names).isdisjoint(teams[1].player_names)
+    assert len(teams[0].player_names) == 3
+    assert len(teams[1].player_names) == 3

@@ -3,7 +3,7 @@ from pandas import DataFrame
 import random
 import asyncio
 
-from app.data import Question, Declaration, CardSet
+from app.data import Question, Declaration, CardSet, Team
 from app.player import PlayerInterface
 from app.network import NetworkDelegate
 from app.constants import *
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class Game:
     """Responsible for managing a game and its players"""
 
-    def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: tuple, virtual_deck: bool):
+    def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: dict, virtual_deck: bool):
         self.network_delegate = network_delegate
         self.pin: int = pin
         self.ledger: list = []
@@ -29,17 +29,13 @@ class Game:
         for player in players:
             self.players[player.name] = player
 
-        self.teams = {}
-        for team in teams:
-            self.teams[team[NAME]] = team[PLAYERS]
+        self.teams = teams
+        for team in teams.values():
+            # self.teams[team[NAME]] = team[PLAYERS]
             # TODO refactor teams to associate team name with player better
-            for player in team[PLAYERS]:
-                player: PlayerInterface = self.players[player]
-                player.team_name = team[NAME]
-
-        self.set_counts = {}
-        for team in teams:
-            self.set_counts[team[NAME]] = 0
+            for name in team.player_names:
+                player: PlayerInterface = self.players[name]
+                player.team_name = team.name
 
         self.setup_state()
 
@@ -109,7 +105,8 @@ class Game:
         # TODO not the most elegant way to do this
         player_who_declared = self.players[player_name]
         team_name = player_who_declared.team_name if outcome else self.get_opposing_team_name_for_player(player_name)
-        self.set_counts[team_name] += 1
+        self.teams[team_name].sets_won += 1
+        # self.set_counts[team_name] += 1
 
         declaration: Declaration = Declaration(player_name, card_set, declared_list, outcome)
         self.ledger.append(declaration)
@@ -268,8 +265,8 @@ class Game:
 
     def game_is_over(self) -> bool:
         total_sets_won = 0
-        for set_count in self.set_counts.values():
-            total_sets_won += set_count
+        for team in self.teams.values():
+            total_sets_won += team.sets_won
 
         logger.info(f'Total sets won: {total_sets_won}')
         return total_sets_won == 8
@@ -281,8 +278,8 @@ class Game:
             card_count += len(player.get_cards())
 
         sets_declared = 0
-        for set_count in self.set_counts.values():
-            sets_declared += set_count
+        for team in self.teams.values():
+            sets_declared += team.sets_won
         expected_card_count = 48 - (sets_declared * 6)
 
         if card_count != expected_card_count:

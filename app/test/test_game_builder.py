@@ -1,4 +1,5 @@
 from app import game_builder
+from app.data import Team
 from app.test.mocks.MockNetworkDelegate import MockNetworkDelegate
 
 mock_network_delegate = MockNetworkDelegate()
@@ -21,12 +22,12 @@ def test_game_factory_setup_teams_specified():
     settings = mock_game_settings(True, True)
     teams = game_builder.setup_teams(settings)
     assert len(teams) == 2
-    assert teams[0]["name"] == "test_team_one"
-    assert teams[1]["name"] == "test_team_two"
-    assert len(teams[0]["players"]) == 3
-    assert len(teams[1]["players"]) == 3
-    assert teams[0]["players"] == ["graham", "peter", "mikaela"]
-    assert teams[1]["players"] == ["comp1", "comp2", "comp3"]
+    assert teams[0].name == "test_team_one"
+    assert teams[1].name == "test_team_two"
+    assert len(teams[0].player_names) == 3
+    assert len(teams[1].player_names) == 3
+    assert teams[0].player_names == ["graham", "peter", "mikaela"]
+    assert teams[1].player_names == ["comp1", "comp2", "comp3"]
 
 
 def test_game_factory_setup_teams_unspecified():
@@ -34,10 +35,10 @@ def test_game_factory_setup_teams_unspecified():
     teams = game_builder.setup_teams(settings)
 
     assert len(teams) == 2
-    assert teams[0]["name"] == "Team 1"
-    assert teams[1]["name"] == "Team 2"
-    assert len(teams[0]["players"]) == 3
-    assert len(teams[1]["players"]) == 3
+    assert teams[0].name == "Team 1"
+    assert teams[1].name == "Team 2"
+    assert len(teams[0].player_names) == 3
+    assert len(teams[1].player_names) == 3
 
 
 def mock_game_settings(virtual_deck: bool, include_teams: bool) -> dict:

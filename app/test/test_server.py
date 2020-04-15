@@ -26,11 +26,9 @@ def test_enter_pin():
         data: dict = websocket.receive_json()
         # ensure that next_turn is a valid player name
         message_data = data[DATA]
-        assert message_data[NEXT_TURN] in test_variables.player_names
 
-        for (key, value) in message_data.items():
-            if key != NEXT_TURN:
-                assert value == expected_joined_game_response()[DATA][key]
+        #TODO update these tests
+        assert False
 
 
 def create_game_json() -> dict:
@@ -76,7 +74,6 @@ def expected_joined_game_response() -> dict:
     return {'type': 'joined_game',
             'data': {'teams': [{'name': 'team1', 'players': ['a', 'b', 'c']},
                                {'name': 'team2', 'players': ['d', 'e', 'f']}],
-                     'next_turn': 'a'
                      }
             }
 

@@ -17,6 +17,20 @@ def create_default_state(players: tuple) -> DataFrame:
     return data_frame_methods.create_state_with_value(cards, players, CardStatus.UNKNOWN)
 
 
+def update_player_state_for_question(state: DataFrame, question: Question, players_out: tuple) -> DataFrame:
+    state = update_state_with_turn(state, question)
+    state = update_state_with_players_out_of_cards(state, players_out)
+    state = check_for_process_of_elimination(state)
+    return state
+
+
+def update_player_state_for_declaration(state: DataFrame, declaration: Declaration, players_out: tuple) -> DataFrame:
+    state = update_state_with_declaration(state, declaration)
+    state = update_state_with_players_out_of_cards(state, players_out)
+    state = check_for_process_of_elimination(state)
+    return state
+
+
 def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: tuple):
     """Update column for player to DOES_HAVE for all cards specified, and DOES_NOT_HAVE for remaining rows"""
 
@@ -88,7 +102,8 @@ def process_of_elimination(state: DataFrame, row: str) -> DataFrame:
     status_for_card = state.loc[row, :]
     does_not_have_count = len(status_for_card.where(status_for_card == CardStatus.DOES_NOT_HAVE).dropna())
     leftover_columns = status_for_card.where(status_for_card != CardStatus.DOES_NOT_HAVE).dropna()
-    if does_not_have_count == len(state.columns) - 1 and (leftover_columns[0] != CardStatus.DOES_HAVE and leftover_columns[0] != CardStatus.DECLARED):
+    if does_not_have_count == len(state.columns) - 1 and (
+            leftover_columns[0] != CardStatus.DOES_HAVE and leftover_columns[0] != CardStatus.DECLARED):
         if len(leftover_columns) != 1:
             raise Exception('Should not be possible')
         column_to_update = leftover_columns.index[0]

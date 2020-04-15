@@ -64,9 +64,9 @@ def end_game(game: Game) -> Dict:
 
 def formatted_teams(game: Game) -> list:
     team_json = []
-    for team_name, players in game.teams.items():
+    for team in game.teams.values():
         team_players = []
-        for player in players:
+        for player in team.player_names:
             player_data = {
                 NAME: player,
                 TYPE: game.get_player_type(player),
@@ -74,6 +74,6 @@ def formatted_teams(game: Game) -> list:
             }
             team_players.append(player_data)
 
-        team_entry = {NAME: team_name, PLAYERS: team_players, SET_COUNT: game.set_counts[team_name]}
+        team_entry = {NAME: team.name, PLAYERS: team_players, SET_COUNT: team.sets_won}
         team_json.append(team_entry)
     return team_json

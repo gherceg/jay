@@ -5,7 +5,7 @@ import logging
 from app import game_state
 from app.util import data_frame_methods
 from app.util import util_methods
-from app.data import CardStatus, CardSet
+from app.data import CardStatus, CardSet, Question
 from app.constants import *
 
 logger = logging.getLogger(__name__)
@@ -128,8 +128,8 @@ def test_players_out_of_cards():
     state = game_state.update_state_upon_receiving_cards(state, 'b', cards_for_b)
     state = game_state.update_state_upon_receiving_cards(state, 'c', cards_for_c)
     state = game_state.update_state_upon_receiving_cards(state, 'd', cards_for_d)
-    turn = Turn('c', 'd', '7s', True)
-    state = game_state.update_state_with_turn(state, turn)
+    question = Question('c', 'd', '7s', True)
+    state = game_state.update_state_with_turn(state, question)
 
     players = game_state.get_players_out_of_cards(state)
     assert 'd' in players
