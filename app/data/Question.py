@@ -1,4 +1,7 @@
-class Turn:
+from app.constants import *
+
+
+class Question:
     def __init__(
             self,
             questioner: str,
@@ -18,8 +21,8 @@ class Turn:
             return "{0} asked {1} for the {2}".format(self.questioner, self.respondent, self.card)
 
     def to_dict(self) -> dict:
-        return {'type': 'turn',
-                'questioner': self.questioner,
-                'respondent': self.respondent,
-                'card': self.card,
-                'outcome': self.outcome}
+        return {TYPE: TURN,  # TODO change to question
+                QUESTIONER: self.questioner,
+                RESPONDENT: self.respondent,
+                CARD: self.card,
+                OUTCOME: self.outcome}

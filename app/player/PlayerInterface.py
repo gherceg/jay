@@ -2,7 +2,7 @@ import logging
 from pandas import DataFrame
 
 from app.player import state_methods
-from app.game.data import Turn, Declaration
+from app.data import Question, Declaration
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ class PlayerInterface:
         # TODO ideally pass this in but teams are horrendous right now and need to be refactored
         self.team_name = None
 
-    def received_next_turn(self, turn: Turn, players_out_of_play: tuple):
-        self.state = state_methods.update_state_with_turn(self.state, turn)
+    def received_next_turn(self, question: Question, players_out_of_play: tuple):
+        self.state = state_methods.update_state_with_turn(self.state, question)
         self.state = state_methods.update_state_with_players_out_of_cards(self.state, players_out_of_play)
         self.state = state_methods.check_for_process_of_elimination(self.state)
 

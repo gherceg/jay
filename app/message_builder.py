@@ -4,7 +4,7 @@ import logging
 from app.constants import *
 from app.game import Game
 from app.player import PlayerInterface
-from app.game.data import Turn, Declaration
+from app.data import Question, Declaration
 from app.util import Optional
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ def game_update(game: Game, player: PlayerInterface) -> Dict:
 
     if opt_turn.is_present():
         turn = opt_turn.get()
-        turn_type = TURN if isinstance(turn, Turn) else DECLARATION
+        turn_type = TURN if isinstance(turn, Question) else DECLARATION
         contents[DATA][LAST_TURN] = {
             TYPE: turn_type,
             DATA: turn.to_dict()

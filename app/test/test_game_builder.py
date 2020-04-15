@@ -1,4 +1,4 @@
-from app.game import game_builder
+from app import game_builder
 from app.test.mocks.MockNetworkDelegate import MockNetworkDelegate
 
 mock_network_delegate = MockNetworkDelegate()

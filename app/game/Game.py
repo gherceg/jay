@@ -3,12 +3,12 @@ from pandas import DataFrame
 import random
 import asyncio
 
-from app.game.data import Turn, Declaration, CardSet
+from app.data import Question, Declaration, CardSet
 from app.player import PlayerInterface, state_methods, computer_player_methods as cpm
 from app.network import NetworkDelegate
 from app.constants import *
 from app.util import Optional
-from app.game import game_messages, game_validation
+from app import message_builder, message_validation
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class Game:
     async def automate_turn(self, player: PlayerInterface):
         await asyncio.sleep(COMPUTER_WAIT_TIME)
         generated_turn: dict = cpm.generate_turn(player, self.get_opponents_names_in_play(player))
-        error = game_validation.validate_question(self, generated_turn)
+        error = message_validation.validate_question(self, generated_turn)
         if error.is_present() and generated_turn[TURN_TYPE] != DECLARATION:
             logger.error(
                 f'Computer {player.name} is asking invalid question: {error.get()}\nHas {player.get_cards()}\n{player.state}')
@@ -95,9 +95,9 @@ class Game:
         logger.info(
             f'QUESTION: {questioner} asking {respondent} for the {card}. Outcome is {outcome}')
         self.up_next = Optional(questioner) if outcome else Optional(respondent)
-        turn = Turn(questioner, respondent, card, outcome)
-        self.ledger.append(turn)
-        self.update_state_for_question(turn)
+        question = Question(questioner, respondent, card, outcome)
+        self.ledger.append(question)
+        self.update_state_for_question(question)
 
     def update_game_for_declaration(self, player_name: str, card_set: CardSet, declared_list: tuple):
         outcome = True
@@ -128,7 +128,7 @@ class Game:
         for key, player in self.players.items():
             player.received_declaration(declaration, players_out)
 
-    def update_state_for_question(self, question: Turn):
+    def update_state_for_question(self, question: Question):
         # update game's state
         self.state = state_methods.update_state_with_turn(self.state, question)
 
@@ -148,11 +148,11 @@ class Game:
 
     # Network Methods
     async def broadcast_turn(self, player: PlayerInterface):
-        contents = game_messages.game_update(self, player)
+        contents = message_builder.game_update(self, player)
         await self.network_delegate.broadcast_message(player.name, contents)
 
     async def broadcast_end_game(self, name: str):
-        contents = game_messages.end_game(self)
+        contents = message_builder.end_game(self)
         await self.network_delegate.broadcast_message(name, contents)
 
     # Set Methods

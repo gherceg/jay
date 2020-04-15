@@ -1,6 +1,6 @@
 import random
 
-from app.game.data import CardSet
+from app.data import CardSet
 from app.util import Optional
 from app.constants import *
 

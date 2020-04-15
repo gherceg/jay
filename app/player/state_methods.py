@@ -2,7 +2,7 @@ import logging
 from pandas import DataFrame
 import random
 
-from app.game.data import Turn, Declaration, CardStatus, CardSet
+from app.data import Question, Declaration, CardStatus, CardSet
 from app.util import util_methods, data_frame_methods, Optional
 from app.constants import *
 
@@ -39,22 +39,22 @@ def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: tupl
     return state
 
 
-def update_state_with_turn(state: DataFrame, turn: Turn) -> DataFrame:
-    card_set: CardSet = util_methods.set_for_card(turn.card)
+def update_state_with_turn(state: DataFrame, question: Question) -> DataFrame:
+    card_set: CardSet = util_methods.set_for_card(question.card)
 
-    if turn.outcome:
+    if question.outcome:
         # the questioner has the card so the rest do not
-        state.loc[turn.card, :] = CardStatus.DOES_NOT_HAVE
-        state.loc[turn.card, turn.questioner] = CardStatus.DOES_HAVE
+        state.loc[question.card, :] = CardStatus.DOES_NOT_HAVE
+        state.loc[question.card, question.questioner] = CardStatus.DOES_HAVE
     else:
         # both players do not have the given card
-        state.loc[turn.card, turn.questioner] = CardStatus.DOES_NOT_HAVE
-        state.loc[turn.card, turn.respondent] = CardStatus.DOES_NOT_HAVE
+        state.loc[question.card, question.questioner] = CardStatus.DOES_NOT_HAVE
+        state.loc[question.card, question.respondent] = CardStatus.DOES_NOT_HAVE
 
     # update any unknown statuses to might have for the player asking the question
     state = data_frame_methods.update_rows_with_old_to_new_for_column(state,
                                                                       card_set.value,
-                                                                      turn.questioner,
+                                                                      question.questioner,
                                                                       CardStatus.UNKNOWN,
                                                                       CardStatus.MIGHT_HAVE)
 

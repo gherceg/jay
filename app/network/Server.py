@@ -1,10 +1,8 @@
 import logging
-import json
-import asyncio
-from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
+from starlette.websockets import WebSocket, WebSocketState
 from typing import Dict
 
-from app.game import game_messages, game_builder, game_validation
+from app import message_builder, game_builder, message_validation
 from app.util import util_methods
 from app.constants import *
 from app.network import NetworkDelegate, network_methods
@@ -72,13 +70,13 @@ class Server(NetworkDelegate):
         self.game = created_game
         self.games[created_game.pin] = created_game
         logger.info('Create Game Request: created new game with pin {0}'.format(self.game.pin))
-        data_to_send = game_messages.created_game(self.game)
+        data_to_send = message_builder.created_game(self.game)
         await network_methods.send_message(websocket, data_to_send)
 
     async def handle_enter_pin_request(self, websocket: WebSocket, data: dict):
         if PIN in data:
             if self.game and data[PIN] == self.game.pin:
-                data_to_send = game_messages.joined_game(self.game)
+                data_to_send = message_builder.joined_game(self.game)
                 await network_methods.send_message(websocket, data_to_send)
             else:
                 await network_methods.send_error(websocket, 'Enter Pin Request: Invalid pin')
@@ -96,14 +94,14 @@ class Server(NetworkDelegate):
                 else:
                     await network_methods.send_error(websocket, 'Select Player Request: Missing cards field')
 
-            data_to_send = game_messages.game_update(self.game, player)
+            data_to_send = message_builder.game_update(self.game, player)
 
             await network_methods.send_message(websocket, data_to_send)
         else:
             await network_methods.send_error('Select Player Request: Missing name field')
 
     async def handle_question(self, websocket: WebSocket, data: dict):
-        error = game_validation.validate_question(self.game, data)
+        error = message_validation.validate_question(self.game, data)
         if error.is_present():
             await network_methods.send_error(websocket, error.get())
         else:

@@ -1,5 +1,4 @@
-from app.game import game_builder
-from app.player import PlayerInterface
+from app import game_builder
 from app.constants import *
 
 

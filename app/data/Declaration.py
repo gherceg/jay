@@ -1,5 +1,6 @@
-from app.game.data.CardSet import CardSet
+from app.data.CardSet import CardSet
 from app.util import util_methods
+from app.constants import *
 
 
 class Declaration:
@@ -16,8 +17,8 @@ class Declaration:
             return "{0} failed to declare the {1}".format(self.player, self.card_set)
 
     def to_dict(self) -> dict:
-        return {'type': 'declaration',
-                'player': self.player,
-                'card_set': util_methods.key_for_card_set(self.card_set),
-                'declared_map': self.declared_list,
-                'outcome': self.outcome}
+        return {TYPE: DECLARATION,
+                PLAYER: self.player,
+                CARD_SET: util_methods.key_for_card_set(self.card_set),
+                DECLARED_MAP: self.declared_list,
+                OUTCOME: self.outcome}

@@ -3,7 +3,7 @@ import random
 from pandas import DataFrame
 
 from app.player import PlayerInterface, state_methods
-from app.game.data import Turn, Declaration, CardSet, CardStatus
+from app.data import Question, Declaration, CardSet, CardStatus
 from app.util import util_methods
 from app.constants import *
 

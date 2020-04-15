@@ -3,7 +3,7 @@ from pandas import DataFrame
 
 from app.player import state_methods, computer_player_methods as cpm
 from app.util import data_frame_methods, util_methods
-from app.game.data import CardStatus, CardSet
+from app.data import CardStatus, CardSet
 
 logger = logging.getLogger(__name__)
 

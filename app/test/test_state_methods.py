@@ -6,7 +6,7 @@ from app.network import Server
 from app.player import state_methods
 from app.util import data_frame_methods
 from app.util import util_methods
-from app.game.data import CardStatus, CardSet, Turn
+from app.data import CardStatus, CardSet, Question
 from app.constants import *
 
 logger = logging.getLogger(__name__)
