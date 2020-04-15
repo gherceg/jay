@@ -4,11 +4,11 @@ import random
 import asyncio
 
 from app.data import Question, Declaration, CardSet
-from app.player import PlayerInterface, state_methods, computer_player_methods as cpm
+from app.player import PlayerInterface
 from app.network import NetworkDelegate
 from app.constants import *
 from app.util import Optional
-from app import message_builder, message_validation
+from app import message_builder, message_validation, game_state, computer_player as cpm
 
 logger = logging.getLogger(__name__)
 
@@ -122,17 +122,17 @@ class Game:
 
     def update_state_for_declaration(self, declaration: Declaration):
         # update game's state
-        self.state = state_methods.update_state_with_declaration(self.state, declaration)
+        self.state = game_state.update_state_with_declaration(self.state, declaration)
 
-        players_out = state_methods.get_players_out_of_cards(self.state)
+        players_out = game_state.get_players_out_of_cards(self.state)
         for key, player in self.players.items():
             player.received_declaration(declaration, players_out)
 
     def update_state_for_question(self, question: Question):
         # update game's state
-        self.state = state_methods.update_state_with_turn(self.state, question)
+        self.state = game_state.update_state_with_turn(self.state, question)
 
-        players_out = state_methods.get_players_out_of_cards(self.state)
+        players_out = game_state.get_players_out_of_cards(self.state)
         for key, player in self.players.items():
             player.received_next_turn(question, players_out)
 
@@ -172,7 +172,7 @@ class Game:
         return list(self.players.keys())
 
     def get_player_cards(self, player: str) -> tuple:
-        return state_methods.get_cards_for_player(self.state, player)
+        return game_state.get_cards_for_player(self.state, player)
 
     def get_player_type(self, player: str) -> str:
         return self.players[player].player_type
@@ -220,11 +220,11 @@ class Game:
     # PRIVATE METHODS
 
     def setup_state(self):
-        self.state = state_methods.create_default_state(tuple(self.players.keys()))
+        self.state = game_state.create_default_state(tuple(self.players.keys()))
 
         for (name, player) in self.players.items():
             cards = player.get_cards()
-            self.state = state_methods.update_state_upon_receiving_cards(self.state, name, cards)
+            self.state = game_state.update_state_upon_receiving_cards(self.state, name, cards)
 
     def determine_player_up_next_after_declaration(self, player: PlayerInterface, outcome: bool) -> Optional[str]:
         eligible_opponents = self.get_opponents_in_play(player)
