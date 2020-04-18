@@ -36,7 +36,8 @@ class Server(NetworkDelegate):
         data = message[DATA]
 
         if message[MESSAGE_TYPE] == CREATE_GAME:
-            await self.handle_create_game_request(websocket, data)
+            new_game = await self.handle_create_game_request(websocket, data)
+            self.games[new_game.pin] = new_game
 
         elif message[MESSAGE_TYPE] == ENTER_PIN:
             await self.handle_enter_pin_request(websocket, data)
@@ -50,12 +51,12 @@ class Server(NetworkDelegate):
         elif message[MESSAGE_TYPE] == DECLARATION:
             await self.handle_declaration(websocket, data)
 
-    async def handle_create_game_request(self, websocket: WebSocket, data: dict):
+    async def handle_create_game_request(self, websocket: WebSocket, data: dict) -> Game:
         created_game = game_builder.create_game(self, data)
-        self.games[created_game.pin] = created_game
         logger.info('Create Game Request: created new game with pin {0}'.format(created_game.pin))
         data_to_send = message_builder.created_game(created_game)
         await network_methods.send_message(websocket, data_to_send)
+        return created_game
 
     async def handle_enter_pin_request(self, websocket: WebSocket, data: dict):
         if PIN in data and data[PIN] in self.games.keys():
@@ -65,6 +66,7 @@ class Server(NetworkDelegate):
         else:
             await network_methods.send_error(websocket, 'Enter Pin Request: Missing or invalid pin')
 
+
     async def handle_select_player_request(self, websocket: WebSocket, data: dict):
         if PIN in data and data[PIN] in self.games.keys():
             game = self.games[data[PIN]]
@@ -72,11 +74,9 @@ class Server(NetworkDelegate):
             if NAME in data:
                 self.register_client(data[NAME], data[PIN], websocket)
                 player = game.players[data[NAME]]
+
                 if game.virtual_deck is False:
-                    if CARDS in data:
-                        player.set_initial_cards(data[CARDS])
-                    else:
-                        await network_methods.send_error(websocket, 'Select Player Request: Missing cards field')
+                    await network_methods.send_error(websocket, 'Select Player Request: Missing cards field')
 
                 data_to_send = message_builder.game_update(game, player)
 
@@ -126,19 +126,22 @@ class Server(NetworkDelegate):
             logger.info(f'Registered new client\n{client}')
 
     # Network Delegate Implementation
-    async def broadcast_message(self, name: str, contents: Dict):
-        if name in self.clients.keys():
-            websocket = self.clients[name]
+    async def broadcast_message(self, client_id: str, contents: Dict):
+        if client_id not in self.clients.keys():
+            logger.warning(f'Could not find client for identifier {client_id}')
+            return
+
+        client = self.clients[client_id]
+        for identifier, websocket in client.connections.items():
             try:
-                logger.info(f'Websocket {websocket.client} application state {websocket.application_state}.\n')
+                logger.info(f'Sending message to client {client.identifier} connection {identifier}')
                 if websocket.application_state == WebSocketState.CONNECTED:
                     await websocket.send_json(contents)
                 else:
-                    logger.error(f'Websocket {websocket.client} is disconnected. Not sending message')
+                    logger.error(f'Websocket {identifier} is disconnected. Not sending message')
             except:
                 # TODO figure out concurrency issue with not receiving disconnect until event loop is idle again
                 #  to avoid broad exception clause, figure out a specific exception to catch.
                 #  The crash is due to starlette.websockets.exceptions.ConnectionClosedOK
                 logger.error('Attempted to send message to disconnected websocket.')
-        else:
-            logger.warning('Could not find {0} in client dict'.format(name))
+
