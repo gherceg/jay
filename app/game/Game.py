@@ -4,7 +4,7 @@ import random
 import asyncio
 
 from app.data import Question, Declaration, CardSet, Team, Player
-from app.network import NetworkDelegate
+from app.network import NetworkDelegate, network_methods
 from app.constants import *
 from app.util import Optional
 from app import message_builder, message_validation, game_state, computer_player as cpm
@@ -142,11 +142,13 @@ class Game:
     # Network Methods
     async def broadcast_turn(self, player: Player):
         contents = message_builder.game_update(self, player)
-        await self.network_delegate.broadcast_message(player.name, contents)
+        client_identifier = network_methods.client_identifier(player.name, str(self.pin))
+        await self.network_delegate.broadcast_message(client_identifier, contents)
 
     async def broadcast_end_game(self, name: str):
         contents = message_builder.end_game(self)
-        await self.network_delegate.broadcast_message(name, contents)
+        client_identifier = network_methods.client_identifier(name, str(self.pin))
+        await self.network_delegate.broadcast_message(client_identifier, contents)
 
     # Set Methods
     def set_player_to_start(self, player: str):
