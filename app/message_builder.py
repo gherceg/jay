@@ -3,8 +3,7 @@ import logging
 
 from app.constants import *
 from app.game import Game
-from app.player import PlayerInterface
-from app.data import Question, Declaration
+from app.data import Question, Declaration, Player
 from app.util import Optional
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ def joined_game(game: Game) -> Dict:
     }
 
 
-def game_update(game: Game, player: PlayerInterface) -> Dict:
+def game_update(game: Game, player: Player) -> Dict:
     opt_turn = Optional(game.ledger[-1]) if len(game.ledger) > 0 else Optional.empty()
     contents = {
         MESSAGE_TYPE: GAME_UPDATE,

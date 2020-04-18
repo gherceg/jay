@@ -2,25 +2,24 @@ import logging
 import random
 from pandas import DataFrame
 
-from app.player import PlayerInterface
 from app import game_state
-from app.data import CardSet, CardStatus
+from app.data import CardSet, CardStatus, Player
 from app.util import util_methods
 from app.constants import *
 
 logger = logging.getLogger(__name__)
 
 
-def generate_turn(player: PlayerInterface, eligible_player_names: tuple) -> dict:
-    # team_players = (player.name,) + player.teammates
-    # set_to_declare = None
-    # highest_score = -1
-    # for card_set in CardSet:
-    #     score_for_set = score_declaration_for_set(player.state, team_players, card_set)
-    #     if score_for_set > highest_score:
-    #         highest_score = score_for_set
-    #         set_to_declare = card_set
-    # logger.info(f'Checking declaration: would declare {set_to_declare} with a score of {highest_score}')
+def generate_turn(player: Player, eligible_player_names: tuple) -> dict:
+    team_players = (player.name,) + player.teammates
+    set_to_declare = None
+    highest_score = -1
+    for card_set in CardSet:
+        score_for_set = score_declaration_for_set(player.state, team_players, card_set)
+        if score_for_set > highest_score:
+            highest_score = score_for_set
+            set_to_declare = card_set
+    logger.info(f'Checking declaration: would declare {set_to_declare} with a score of {highest_score}')
 
     if len(eligible_player_names) == 0:
         # have to declare
@@ -42,7 +41,7 @@ def generate_turn(player: PlayerInterface, eligible_player_names: tuple) -> dict
         return attempt_to_declare(player)
 
 
-def attempt_to_declare(player: PlayerInterface) -> dict:
+def attempt_to_declare(player: Player) -> dict:
     team_players = (player.name,) + player.teammates
     set_to_declare = None
     highest_score = -1
@@ -64,7 +63,7 @@ def attempt_to_declare(player: PlayerInterface) -> dict:
                 if len(team_unknown) == 0:
                     team_does_not_have = team_rows[team_rows == CardStatus.DOES_NOT_HAVE]
                     logger.error(
-                        f'Computer is being forced to declare even though it is not possible. Should not happen.\n\{player.get_card()}n{player.state}')
+                        f'Computer is being forced to declare even though it is not possible. Should not happen.\n\{player.get_cards()}n{player.state}')
                     player_for_card = team_does_not_have.keys()[0]
                 else:
                     player_for_card = team_unknown.keys()[0]

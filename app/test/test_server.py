@@ -34,12 +34,12 @@ def test_enter_pin():
 def create_game_json() -> dict:
     return {'type': 'create_game',
             'data': {
-                'players': [{'name': 'a', 'type': 'network'},
-                            {'name': 'b', 'type': 'network'},
-                            {'name': 'c', 'type': 'network'},
-                            {'name': 'd', 'type': 'network'},
-                            {'name': 'e', 'type': 'network'},
-                            {'name': 'f', 'type': 'network'}],
+                'players': [{'name': 'a', 'type': 'network', 'team': 'team1'},
+                            {'name': 'b', 'type': 'network', 'team': 'team1'},
+                            {'name': 'c', 'type': 'network', 'team': 'team1'},
+                            {'name': 'd', 'type': 'network', 'team': 'team2'},
+                            {'name': 'e', 'type': 'network', 'team': 'team2'},
+                            {'name': 'f', 'type': 'network', 'team': 'team2'}],
                 'teams': [{'name': 'team1', 'players': ('a', 'b', 'c')},
                           {'name': 'team2', 'players': ('d', 'e', 'f')}],
                 'virtual_deck': False

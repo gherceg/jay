@@ -7,6 +7,7 @@ NAME = "name"
 QUESTIONER = "questioner"
 RESPONDENT = "respondent"
 CARD = "card"
+TEAM = "team"
 OUTCOME = "outcome"
 CARDS = "cards"
 PLAYER = "player"
@@ -53,5 +54,5 @@ HIGH_HEARTS_KEY = "high_hearts"
 LOW_DIAMONDS_KEY = "low_diamonds"
 HIGH_DIAMONDS_KEY = "high_diamonds"
 
-COMPUTER_WAIT_TIME = 5
+COMPUTER_WAIT_TIME = 2
 

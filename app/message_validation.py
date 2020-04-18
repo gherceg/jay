@@ -2,7 +2,7 @@ import logging
 
 from app.constants import *
 from app.game import Game
-from app.player import PlayerInterface
+from app.data import Player
 from app.util import Optional, util_methods
 
 logger = logging.getLogger(__name__)
@@ -21,11 +21,11 @@ def validate_question(game: Game, data: dict) -> Optional[str]:
     if questioner not in game.players or respondent not in game.players or card not in valid_cards:
         return Optional(f'Error processing question message: Unknown values for either players or cards.')
 
-    player_asking: PlayerInterface = game.players[questioner]
-    player_responding: PlayerInterface = game.players[respondent]
+    player_asking: Player = game.players[questioner]
+    player_responding: Player = game.players[respondent]
 
     # ensure players are on opposing teams
-    if player_responding.name not in player_asking.opposing_team or player_asking.name not in player_responding.opposing_team:
+    if player_responding.name not in player_asking.opponents or player_asking.name not in player_responding.opponents:
         return Optional(f'Illegal Question: Players are not on opposing team')
 
     # ensure player asking question has other cards in that set
