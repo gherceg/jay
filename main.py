@@ -30,9 +30,8 @@ class WebSocket(WebSocketEndpoint):
     encoding = "json"
 
     async def on_connect(self, websocket: WebSocket) -> None:
-        logger.info(f'Encoding is {self.encoding}')
         logger.info(f'Connected websocket {websocket.client}')
-        await server.connect(websocket)
+        await websocket.accept()
 
     async def on_receive(self, websocket: WebSocket, data: Any) -> None:
         logger.info(f'Received message from websocket {websocket.client}')
