@@ -1,25 +1,26 @@
 import random
+from typing import List, Set
 
 from app.data import CardSet
 from app.util import Optional
 from app.constants import *
 
 
-def eligible_sets(cards: tuple) -> tuple:
+def eligible_sets(cards: List[str]) -> List[CardSet]:
     sets = set()
     for card in cards:
         sets.add(set_for_card(card))
 
-    return tuple(sets)
+    return list(sets)
 
 
-def eligible_cards(cards: tuple) -> tuple:
+def eligible_cards(cards: List[str]) -> List[str]:
     sets = eligible_sets(cards)
-    all_cards_for_sets = set()
+    all_cards_for_sets: Set[str] = set()
     for card_set in sets:
         all_cards_for_sets.update(card_set.value)
 
-    return tuple(all_cards_for_sets.symmetric_difference(cards))
+    return list(all_cards_for_sets.symmetric_difference(cards))
 
 
 def set_for_card(card) -> CardSet:
@@ -29,18 +30,18 @@ def set_for_card(card) -> CardSet:
     raise ValueError('CardSet does not exist for card {0}'.format(card))
 
 
-def deck_of_cards() -> tuple:
+def deck_of_cards() -> List[str]:
     cards = []
     for card_set in CardSet:
         cards = [*cards, *card_set.value]
-    return tuple(cards)
+    return cards
 
 
 def distribute_cards(player_count: int) -> tuple:
     if 48 % player_count != 0:
         raise ValueError("Player count must be a factor of 48")
 
-    cards = list(deck_of_cards())
+    cards = deck_of_cards()
     # shuffle deck
     random.shuffle(cards)
     # determine number of cards per player

@@ -1,8 +1,8 @@
 import logging
+from typing import List
 
 from app.constants import *
-from app.game import Game
-from app.data import Player
+from app.data import Game,Player, CardSet
 from app.util import Optional, util_methods
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def validate_question(game: Game, data: dict) -> Optional[str]:
 
     # ensure player asking question has other cards in that set
     cards_for_player = player_asking.get_cards()
-    eligible_sets = util_methods.eligible_sets(cards_for_player)
+    eligible_sets: List[CardSet] = util_methods.eligible_sets(cards_for_player)
     eligible_card = False
     for card_set in eligible_sets:
         if card in card_set.value:

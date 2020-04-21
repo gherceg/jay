@@ -8,14 +8,16 @@ from typing import Any
 
 from app.network import Server
 
+# TODO improve middleware
 middleware = [
     Middleware(CORSMiddleware, allow_origins=['*'])
 ]
 
+# create app and server
 app = FastAPI(middleware=middleware)
-
 server = Server()
 
+# setup logging
 logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -30,13 +32,13 @@ class WebSocket(WebSocketEndpoint):
     encoding = "json"
 
     async def on_connect(self, websocket: WebSocket) -> None:
-        logger.info(f'Connected websocket {websocket.client}')
+        logger.debug(f'Connected websocket {websocket.client}')
         await websocket.accept()
 
     async def on_receive(self, websocket: WebSocket, data: Any) -> None:
-        logger.info(f'Received message from websocket {websocket.client}')
+        logger.debug(f'Received message from websocket {websocket.client}')
         await server.handle_message(websocket, data)
 
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
-        logger.info(f'Disconnected websocket {websocket.client}')
+        logger.debug(f'Disconnected websocket {websocket.client}')
         server.remove(websocket)

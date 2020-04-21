@@ -1,1 +1,1 @@
-from app.game.Game import Game
+from app.game.GameManager import GameManager

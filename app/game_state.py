@@ -1,6 +1,7 @@
 import logging
 from pandas import DataFrame
 import random
+from typing import List
 
 from app.data import Question, Declaration, CardStatus, CardSet
 from app.util import util_methods, data_frame_methods, Optional
@@ -9,7 +10,7 @@ from app.constants import *
 logger = logging.getLogger(__name__)
 
 
-def create_default_state(players: tuple) -> DataFrame:
+def create_default_state(players: List[str]) -> DataFrame:
     """Creates and returns a DataFrame object that contains a column for each player and a row for each card
         Each cell is set to the CardStatus UNKNOWN
     """
@@ -17,14 +18,14 @@ def create_default_state(players: tuple) -> DataFrame:
     return data_frame_methods.create_state_with_value(cards, players, CardStatus.UNKNOWN)
 
 
-def update_player_state_for_question(state: DataFrame, question: Question, players_out: tuple) -> DataFrame:
+def update_player_state_for_question(state: DataFrame, question: Question, players_out: List[str]) -> DataFrame:
     state = update_state_with_turn(state, question)
     state = update_state_with_players_out_of_cards(state, players_out)
     state = check_for_process_of_elimination(state)
     return state
 
 
-def update_player_state_for_declaration(state: DataFrame, declaration: Declaration, players_out: tuple) -> DataFrame:
+def update_player_state_for_declaration(state: DataFrame, declaration: Declaration, players_out: List[str]) -> DataFrame:
     state = update_state_with_declaration(state, declaration)
     state = update_state_with_players_out_of_cards(state, players_out)
     state = check_for_process_of_elimination(state)
@@ -82,7 +83,7 @@ def update_state_with_declaration(state: DataFrame, declaration: Declaration) ->
     return state
 
 
-def update_state_with_players_out_of_cards(state: DataFrame, players: tuple) -> DataFrame:
+def update_state_with_players_out_of_cards(state: DataFrame, players: List[str]) -> DataFrame:
     # for each player specified, ensure all values are DECLARED or DOES_NOT_HAVE
     cards = util_methods.deck_of_cards()
     for player in players:
@@ -113,19 +114,19 @@ def process_of_elimination(state: DataFrame, row: str) -> DataFrame:
 
 
 # Read Methods
-def get_cards_for_player(state: DataFrame, player: str) -> tuple:
+def get_cards_for_player(state: DataFrame, player: str) -> List[str]:
     card_rows = state.loc[:, player]
     cards = card_rows[card_rows == CardStatus.DOES_HAVE]
-    return tuple(cards.keys())
+    return list(cards.keys())
 
 
-def get_players_out_of_cards(state: DataFrame) -> tuple:
+def get_players_out_of_cards(state: DataFrame) -> List[str]:
     players = []
-    for player in state.columns.tolist():
-        if len(get_cards_for_player(state, player)) == 0:
-            players.append(player)
+    for player_name in state.columns.tolist():
+        if len(get_cards_for_player(state, player_name)) == 0:
+            players.append(player_name)
 
-    return tuple(players)
+    return players
 
 
 def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optional[tuple]:

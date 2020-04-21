@@ -1,5 +1,6 @@
 import logging
 from pandas import DataFrame
+from typing import List
 # ideally would not need this and just set cards on the player
 from app.game_state import get_cards_for_player
 
@@ -23,5 +24,5 @@ class Player:
     def in_play(self) -> bool:
         return len(self.get_cards()) > 0
 
-    def get_cards(self) -> tuple:
+    def get_cards(self) -> List[str]:
         return get_cards_for_player(self.state, self.name)

@@ -17,8 +17,10 @@ Card Sets are defined as follows:
     { 'type': 'create_game',
       'data': {
         'players': [
-            'name': player name 
-            'type': player type ]
+            'name': player name, 
+            'type': player type,
+            'team': team name
+            ]
         'virtual_deck': Defaults to False
         'teams': [
             'name': team name

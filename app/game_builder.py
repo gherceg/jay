@@ -3,7 +3,7 @@ import random
 import logging
 from pandas import DataFrame
 
-from app.game import Game
+from app.game import GameManager
 from app.data import Player, Team
 from app.network import NetworkDelegate
 from app.util import util_methods
@@ -13,7 +13,7 @@ import app.game_state as game_state
 logger = logging.getLogger(__name__)
 
 
-def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
+def create_game(network_delegate: NetworkDelegate, settings: dict) -> GameManager:
     """Given a dictionary containing game settings, setup a new game and create the players"""
 
     player_names = []
@@ -23,7 +23,7 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
     # create teams if necessary
     teams = setup_teams(settings)
     # create default state
-    default_state = game_state.create_default_state(tuple(player_names))
+    default_state = game_state.create_default_state(player_names)
     # create players
     players = setup_players(settings, teams, default_state)
 
@@ -40,7 +40,11 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> Game:
     teams_dict = {}
     for team in teams:
         teams_dict[team.name] = team
-    game = Game(pin, network_delegate, players, teams_dict, settings[VIRTUAL_DECK])
+
+    players_dict = {}
+    for player in players:
+        players_dict[player.name] = player
+    game = GameManager(pin, network_delegate, players_dict, teams_dict, settings[VIRTUAL_DECK])
 
     player_name: str = get_first_turn(players)
     game.set_player_to_start(player_name)

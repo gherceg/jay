@@ -1,7 +1,8 @@
 from pandas import DataFrame
+from typing import List
 
 
-def create_state_with_value(rows: tuple, columns: tuple, value: object) -> DataFrame:
+def create_state_with_value(rows: List[str], columns: List[str], value: object) -> DataFrame:
     expected_state = DataFrame(columns=columns, index=rows)
     expected_state.fillna(value, inplace=True)
     return expected_state

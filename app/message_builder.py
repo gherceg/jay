@@ -2,8 +2,7 @@ from typing import Dict
 import logging
 
 from app.constants import *
-from app.game import Game
-from app.data import Question, Declaration, Player
+from app.data import Game, Player, Question, Declaration
 from app.util import Optional
 
 logger = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ def game_update(game: Game, player: Player) -> Dict:
                 NAME: player.name,
                 CARDS: player.get_cards()
             },
-            NEXT_TURN: game.up_next.get() if game.up_next.is_present() else '',
+            NEXT_TURN: game.player_up_next.get() if game.player_up_next.is_present() else '',
             TEAMS_KEY: formatted_teams(game)
         }
     }
@@ -65,11 +64,12 @@ def formatted_teams(game: Game) -> list:
     team_json = []
     for team in game.teams.values():
         team_players = []
-        for player in team.player_names:
+        for player_name in team.player_names:
+            player: Player = game.players[player_name]
             player_data = {
-                NAME: player,
-                TYPE: game.get_player_type(player),
-                CARD_COUNT: game.get_player_card_count(player)
+                NAME: player.name,
+                TYPE: player.player_type,
+                CARD_COUNT: len(player.get_cards())
             }
             team_players.append(player_data)
 

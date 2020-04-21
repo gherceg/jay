@@ -2,8 +2,9 @@ import logging
 from pandas import DataFrame
 import random
 import asyncio
+from typing import Dict, List
 
-from app.data import Question, Declaration, CardSet, Team, Player
+from app.data import Question, Declaration, CardSet, Team, Player, Game
 from app.network import NetworkDelegate, network_methods
 from app.constants import *
 from app.util import Optional
@@ -12,34 +13,26 @@ from app import message_builder, message_validation, game_state, computer_player
 logger = logging.getLogger(__name__)
 
 
-class Game:
+class GameManager:
     """Responsible for managing a game and its players"""
 
-    def __init__(self, pin: int, network_delegate: NetworkDelegate, players: tuple, teams: dict, virtual_deck: bool):
+    def __init__(self, pin: int, network_delegate: NetworkDelegate, players: Dict[str, Player], teams: Dict[str, Team],
+                 virtual_deck: bool):
         self.network_delegate = network_delegate
-        self.pin: int = pin
-        # a list of previous turns
-        self.ledger: list = []
-        self.up_next: Optional[str] = Optional.empty()
-        self.state: DataFrame = None
-        self.virtual_deck: bool = virtual_deck
 
-        # create a dictionary of players for easy lookup
-        self.players: dict = {}
-        for player in players:
-            logger.info(f'Player {player.name} located at {id(player)}')
-            self.players[player.name] = player
+        options = set()
+        if virtual_deck:
+            options.add(VIRTUAL_DECK)
 
-        self.teams = teams
-
-        self.setup_state()
+        state = self.setup_default_master_state(list(players.values()))
+        self.game = Game(pin, players, teams, state, Optional.empty(), options)
 
     async def handle_declaration(self, player: str, card_set: CardSet, declared_list: list):
         """Determines declaration outcome, updates game, requests to send up via delegate"""
         self.update_game_for_declaration(player, card_set, tuple(declared_list))
         await self.send_game_update()
 
-        if self.up_next.is_empty():
+        if self.game.player_up_next.is_empty():
             logger.info('Sending end game messages!')
             await self.send_end_game()
             return
@@ -62,7 +55,7 @@ class Game:
     async def automate_turn(self, player: Player):
         await asyncio.sleep(COMPUTER_WAIT_TIME)
         generated_turn: dict = cpm.generate_turn(player, self.get_opponents_names_in_play(player))
-        error = message_validation.validate_question(self, generated_turn)
+        error = message_validation.validate_question(self.game, generated_turn)
         if error.is_present() and generated_turn[TURN_TYPE] != DECLARATION:
             logger.error(
                 f'Computer {player.name} is asking invalid question: {error.get()}\nHas {player.get_cards()}\n{player.state}')
@@ -85,9 +78,9 @@ class Game:
         outcome = self.does_player_have_card(respondent, card)
         logger.info(
             f'QUESTION: {questioner} asking {respondent} for the {card}. Outcome is {outcome}')
-        self.up_next = Optional(questioner) if outcome else Optional(respondent)
+        self.game.player_up_next = Optional(questioner) if outcome else Optional(respondent)
         question = Question(questioner, respondent, card, outcome)
-        self.ledger.append(question)
+        self.game.ledger.append(question)
         self.update_state_for_question(question)
 
     def update_game_for_declaration(self, player_name: str, card_set: CardSet, declared_list: tuple):
@@ -98,85 +91,85 @@ class Game:
             f'DECLARATION: {player_name} declared the {card_set}. Outcome is {outcome}\n{declared_list}')
 
         # TODO not the most elegant way to do this
-        player_who_declared = self.players[player_name]
+        player_who_declared = self.game.players[player_name]
         team_name = player_who_declared.team_name if outcome else self.get_opposing_team_name_for_player(player_name)
-        self.teams[team_name].sets_won += 1
+        self.game.teams[team_name].sets_won += 1
 
         declaration: Declaration = Declaration(player_name, card_set, declared_list, outcome)
-        self.ledger.append(declaration)
+        self.game.ledger.append(declaration)
 
         self.update_state_for_declaration(declaration)
 
-        self.up_next = self.determine_player_up_next_after_declaration(player_who_declared, outcome)
-        if self.up_next.is_present():
-            logger.info(f'{self.up_next.get()} is up next')
+        self.game.player_up_next = self.determine_player_up_next_after_declaration(player_who_declared, outcome)
+        if self.game.player_up_next.is_present():
+            logger.info(f'{self.game.player_up_next.get()} is up next')
 
     def update_state_for_declaration(self, declaration: Declaration):
         # update game's state
-        self.state = game_state.update_state_with_declaration(self.state, declaration)
+        self.game.state = game_state.update_state_with_declaration(self.game.state, declaration)
 
-        players_out = game_state.get_players_out_of_cards(self.state)
-        for key, player in self.players.items():
+        players_out = game_state.get_players_out_of_cards(self.game.state)
+        for key, player in self.game.players.items():
             player.state = game_state.update_player_state_for_declaration(player.state, declaration, players_out)
             # player.received_declaration(declaration, players_out)
 
     def update_state_for_question(self, question: Question):
         # update game's state
-        self.state = game_state.update_state_with_turn(self.state, question)
+        self.game.state = game_state.update_state_with_turn(self.game.state, question)
 
-        players_out = game_state.get_players_out_of_cards(self.state)
-        for key, player in self.players.items():
+        players_out = game_state.get_players_out_of_cards(self.game.state)
+        for key, player in self.game.players.items():
             player.state = game_state.update_player_state_for_question(player.state, question, players_out)
             # player.received_next_turn(question, players_out)
 
     async def send_game_update(self):
-        for key, player in self.players.items():
+        for key, player in self.game.players.items():
             if player.player_type == NETWORK_PLAYER:
                 await self.broadcast_turn(player)
 
     async def send_end_game(self):
-        for key, player in self.players.items():
+        for key, player in self.game.players.items():
             if player.player_type == NETWORK_PLAYER:
                 await self.broadcast_end_game(player.name)
 
     # Network Methods
     async def broadcast_turn(self, player: Player):
-        contents = message_builder.game_update(self, player)
-        client_identifier = network_methods.client_identifier(player.name, str(self.pin))
+        contents = message_builder.game_update(self.game, player)
+        client_identifier = network_methods.client_identifier(player.name, str(self.game.pin))
         await self.network_delegate.broadcast_message(client_identifier, contents)
 
     async def broadcast_end_game(self, name: str):
-        contents = message_builder.end_game(self)
-        client_identifier = network_methods.client_identifier(name, str(self.pin))
+        contents = message_builder.end_game(self.game)
+        client_identifier = network_methods.client_identifier(name, str(self.game.pin))
         await self.network_delegate.broadcast_message(client_identifier, contents)
 
     # Set Methods
     def set_player_to_start(self, player: str):
-        self.up_next = Optional(player)
+        self.game.player_up_next = Optional(player)
         # TODO: if computer, let them know
 
     # Get Methods
     def get_player_up_next(self) -> Optional[Player]:
-        if self.up_next.is_present():
-            player = self.players[self.up_next.get()]
+        if self.game.player_up_next.is_present():
+            player = self.game.players[self.game.player_up_next.get()]
             return Optional(player)
         else:
             return Optional.empty()
 
     def get_player_names(self):
-        return list(self.players.keys())
+        return list(self.game.players.keys())
 
-    def get_player_cards(self, player: str) -> tuple:
-        return game_state.get_cards_for_player(self.state, player)
+    def get_player_cards(self, player: str) -> List[str]:
+        return game_state.get_cards_for_player(self.game.state, player)
 
     def get_player_type(self, player: str) -> str:
-        return self.players[player].player_type
+        return self.game.players[player].player_type
 
     def get_player_card_count(self, player: str) -> int:
         return len(self.get_player_cards(player))
 
     def get_team_name_for_player(self, player: str) -> str:
-        for team in self.teams.values():
+        for team in self.game.teams.values():
             if player in team.player_names:
                 return team.name
 
@@ -184,13 +177,13 @@ class Game:
 
     # TODO could refactor
     def get_opposing_team_name_for_player(self, player: str) -> str:
-        for team in self.teams.values():
+        for team in self.game.teams.values():
             if player not in team.player_names:
                 return team.name
 
     def get_opponents_names_in_play(self, player: Player) -> tuple:
         eligible_players = []
-        for temp_player in self.players.values():
+        for temp_player in self.game.players.values():
             if temp_player.team_name != player.team_name and temp_player.in_play:
                 eligible_players.append(temp_player.name)
 
@@ -198,7 +191,7 @@ class Game:
 
     def get_opponents_in_play(self, player: Player) -> tuple:
         eligible_players = []
-        for temp_player in self.players.values():
+        for temp_player in self.game.players.values():
             if temp_player.team_name != player.team_name and temp_player.in_play:
                 eligible_players.append(temp_player)
 
@@ -206,7 +199,7 @@ class Game:
 
     def get_teammates_in_play(self, player: Player) -> tuple:
         eligible_players = []
-        for temp_player in self.players.values():
+        for temp_player in self.game.players.values():
             logger.info(f'Finding eligible teammates: {temp_player.name} on team {temp_player.team_name}')
             if temp_player.team_name == player.team_name and temp_player.in_play:
                 eligible_players.append(temp_player)
@@ -215,12 +208,15 @@ class Game:
 
     # PRIVATE METHODS
 
-    def setup_state(self):
-        self.state = game_state.create_default_state(tuple(self.players.keys()))
+    def setup_default_master_state(self, players: List[Player]) -> DataFrame:
+        player_names = list(map(lambda p: p.name, players))
+        state = game_state.create_default_state(player_names)
 
-        for (name, player) in self.players.items():
+        for player in players:
             cards = player.get_cards()
-            self.state = game_state.update_state_upon_receiving_cards(self.state, name, cards)
+            state = game_state.update_state_upon_receiving_cards(state, player.name, cards)
+
+        return state
 
     def determine_player_up_next_after_declaration(self, player: Player, outcome: bool) -> Optional[str]:
         eligible_opponents = self.get_opponents_in_play(player)
@@ -258,13 +254,13 @@ class Game:
                 raise Exception('Everyone is out but the game is not over.')
 
     def does_player_have_card(self, player_name: str, card: str):
-        if player_name not in self.players.keys():
+        if player_name not in self.game.players.keys():
             raise ValueError(f"Player {player_name} not found in game")
-        return self.players[player_name].has_card(card)
+        return self.game.players[player_name].has_card(card)
 
     def game_is_over(self) -> bool:
         total_sets_won = 0
-        for team in self.teams.values():
+        for team in self.game.teams.values():
             total_sets_won += team.sets_won
 
         logger.info(f'Total sets won: {total_sets_won}')
@@ -273,11 +269,11 @@ class Game:
     # DEBBUG Method
     def verify_cards_left_makes_sense(self):
         card_count = 0
-        for player in self.players.values():
+        for player in self.game.players.values():
             card_count += len(player.get_cards())
 
         sets_declared = 0
-        for team in self.teams.values():
+        for team in self.game.teams.values():
             sets_declared += team.sets_won
         expected_card_count = 48 - (sets_declared * 6)
 

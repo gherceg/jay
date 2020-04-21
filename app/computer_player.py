@@ -34,6 +34,7 @@ def generate_turn(player: Player, eligible_player_names: tuple) -> dict:
 
     # could not declare, so ask a question
     eligible_cards = util_methods.eligible_cards(player.get_cards())
+    logger.info(f'Eligible players names: {eligible_player_names}')
     card, player_to_ask = get_eligible_question_pair(player.state, eligible_cards, eligible_player_names)
     if card is not None and player_to_ask is not None:
         return question_dict(player.name, player_to_ask, card)
@@ -100,6 +101,7 @@ def score_declaration_for_set(state: DataFrame, team: tuple, card_set: CardSet) 
 
 
 def get_eligible_question_pair(state: DataFrame, cards_to_ask_for: tuple, opponents: tuple) -> (str, str):
+    logger.info(f'Cards: {cards_to_ask_for}. Opponents: {opponents}')
     opponents_df = state.loc[list(cards_to_ask_for), list(opponents)]
 
     have_df = opponents_df[opponents_df[list(opponents)] == CardStatus.DOES_HAVE]
