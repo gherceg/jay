@@ -113,7 +113,6 @@ class GameManager:
         players_out = game_state.get_players_out_of_cards(self.game.state)
         for key, player in self.game.players.items():
             player.state = game_state.update_player_state_for_declaration(player.state, declaration, players_out)
-            # player.received_declaration(declaration, players_out)
 
     def update_state_for_question(self, question: Question):
         # update game's state
@@ -122,9 +121,9 @@ class GameManager:
         players_out = game_state.get_players_out_of_cards(self.game.state)
         for key, player in self.game.players.items():
             player.state = game_state.update_player_state_for_question(player.state, question, players_out)
-            # player.received_next_turn(question, players_out)
 
     async def send_game_update(self):
+        logger.info(f'Sending game update to all clients')
         for key, player in self.game.players.items():
             if player.player_type == NETWORK_PLAYER:
                 await self.broadcast_turn(player)

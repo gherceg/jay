@@ -98,7 +98,7 @@ class Server(NetworkDelegate):
         client = self.clients[client_id]
         for identifier, websocket in client.connections.items():
             try:
-                logger.debug(f'Sending message to client {client.identifier} connection {identifier}')
+                logger.info(f'Sending message to client {client.identifier} connection {identifier}')
                 if websocket.application_state == WebSocketState.CONNECTED:
                     await websocket.send_json(contents)
                 else:
