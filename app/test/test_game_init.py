@@ -1,7 +1,7 @@
 from pandas import DataFrame
 
 from app import game_builder
-from app.data import Team
+from app.data.game_data import Team
 from app.constants import *
 import app.game_state as game_state
 
@@ -18,7 +18,7 @@ def test_network_player_setup():
 
     teams = Team("t1", ("p1", "p2", "p3"), 0), Team("t2", ("p4", "p5", "p6"), 0)
 
-    state = game_state.create_default_state(("p1", "p2", "p3", "p4", "p5", "p6"))
+    state = game_state.create_default_state(["p1", "p2", "p3", "p4", "p5", "p6"])
     players = game_builder.setup_players(player_info, teams, state)
 
     for player in players:
@@ -37,7 +37,7 @@ def test_computer_player_setup():
 
     teams = Team("t1", ("p1", "p2", "p3"), 0), Team("t2", ("p4", "p5", "p6"), 0)
 
-    state = game_state.create_default_state(("p1", "p2", "p3", "p4", "p5", "p6"))
+    state = game_state.create_default_state(["p1", "p2", "p3", "p4", "p5", "p6"])
     players = game_builder.setup_players(player_info, teams, state)
 
     for player in players:
@@ -56,7 +56,7 @@ def test_player_setup_invalid_type_raises_exception():
 
     teams = Team("t1", ("p1", "p2", "p3"), 0), Team("t2", ("p4", "p5", "p6"), 0)
 
-    state = game_state.create_default_state(("p1", "p2", "p3", "p4", "p5", "p6"))
+    state = game_state.create_default_state(["p1", "p2", "p3", "p4", "p5", "p6"])
     try:
         players = game_builder.setup_players(player_info, teams, state)
     except ValueError:
@@ -77,7 +77,7 @@ def test_opposing_teams():
 
     teams = Team("t1", ("p1", "p2", "p3"), 0), Team("t2", ("p4", "p5", "p6"), 0)
 
-    state = game_state.create_default_state(("p1", "p2", "p3", "p4", "p5", "p6"))
+    state = game_state.create_default_state(["p1", "p2", "p3", "p4", "p5", "p6"])
     players = game_builder.setup_players(player_info, teams, state)
 
     for player in players:
@@ -101,7 +101,7 @@ def test_teammates():
 
     teams = Team("t1", ("p1", "p2", "p3"), 0), Team("t2", ("p4", "p5", "p6"), 0)
 
-    state = game_state.create_default_state(("p1", "p2", "p3", "p4", "p5", "p6"))
+    state = game_state.create_default_state(["p1", "p2", "p3", "p4", "p5", "p6"])
     players = game_builder.setup_players(player_info, teams, state)
 
     for player in players:

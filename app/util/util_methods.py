@@ -1,7 +1,7 @@
 import random
 from typing import List, Set
 
-from app.data import CardSet
+from app.data.game_enums import CardSet
 from app.util import Optional
 from app.constants import *
 

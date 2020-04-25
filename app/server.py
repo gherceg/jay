@@ -2,11 +2,11 @@ import logging
 from starlette.websockets import WebSocket, WebSocketState
 from typing import Dict
 
-from app import message_builder, message_handling
-from app.data import Client
-from app.game import GameManager
+from app import message_handling, network_methods
+from app.data.network_data import Client
+from app.game_manager import GameManager
 from app.constants import *
-from app.network import NetworkDelegate, network_methods
+from app.data.network_data import NetworkDelegate
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class Server(NetworkDelegate):
                 game_manager: GameManager = self.game_managers[data[PIN]]
                 await message_handling.handle_enter_pin_request(websocket, game_manager.game)
             else:
-                await network_methods.send_error('Enter Pin Request: Missing or invalid pin field')
+                await network_methods.send_error(websocket, 'Enter Pin Request: Missing or invalid pin field')
 
         elif message[MESSAGE_TYPE] == SELECT_PLAYER:
             if PIN in data and data[PIN] in self.game_managers.keys():
@@ -57,21 +57,21 @@ class Server(NetworkDelegate):
                     self.register_client(data[NAME], data[PIN], websocket)
                     await message_handling.handle_select_player_request(websocket, game_manager.game, data)
             else:
-                await network_methods.send_error('Select Player Request: Missing or invalid pin field')
+                await network_methods.send_error(websocket, 'Select Player Request: Missing or invalid pin field')
 
         elif message[MESSAGE_TYPE] == QUESTION:
             if PIN in data and data[PIN] in self.game_managers.keys():
                 game_manager: GameManager = self.game_managers[data[PIN]]
                 await message_handling.handle_question(websocket, game_manager, data)
             else:
-                await network_methods.send_error('Enter Question: Missing or invalid pin field')
+                await network_methods.send_error(websocket, 'Enter Question: Missing or invalid pin field')
 
         elif message[MESSAGE_TYPE] == DECLARATION:
             if PIN in data and data[PIN] in self.game_managers.keys():
                 game_manager: GameManager = self.game_managers[data[PIN]]
                 await message_handling.handle_declaration(websocket, game_manager, data)
             else:
-                await network_methods.send_error('Enter Question: Missing or invalid pin field')
+                await network_methods.send_error(websocket, 'Enter Question: Missing or invalid pin field')
 
     def register_client(self, player_id: str, game_id: str, websocket: WebSocket):
         # check if client exists
@@ -98,7 +98,7 @@ class Server(NetworkDelegate):
         client = self.clients[client_id]
         for identifier, websocket in client.connections.items():
             try:
-                logger.info(f'Sending message to client {client.identifier} connection {identifier}')
+                logger.debug(f'Sending message to client {client.identifier} connection {identifier}')
                 if websocket.application_state == WebSocketState.CONNECTED:
                     await websocket.send_json(contents)
                 else:

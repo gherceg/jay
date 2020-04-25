@@ -3,12 +3,12 @@ import random
 import logging
 from pandas import DataFrame
 
-from app.game import GameManager
-from app.data import Player, Team
-from app.network import NetworkDelegate
+from app.game_manager import GameManager
+from app.data.game_data import Player, Team
+from app.data.network_data import NetworkDelegate
 from app.util import util_methods
 from app.constants import *
-import app.game_state as game_state
+from app import game_state
 
 logger = logging.getLogger(__name__)
 

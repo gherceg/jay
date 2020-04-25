@@ -1,7 +1,16 @@
 from typing import Dict
 from starlette.websockets import WebSocket
+import abc
 
-from app.network.network_methods import client_identifier
+from app.network_methods import client_identifier
+
+
+# NOTE: doesn't belong here but hoping to remove the need for a delegate class in the future
+class NetworkDelegate(abc.ABC):
+
+    @abc.abstractmethod
+    async def broadcast_message(self, client_id: str, contents: Dict):
+        pass
 
 
 class Client:
@@ -16,4 +25,3 @@ class Client:
 
     def __repr__(self):
         return f'Game ID: {self.game_id}\nPlayer ID: {self.player_id}\n# of Connections: {len(self.connections)}'
-

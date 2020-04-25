@@ -2,7 +2,8 @@ from typing import Dict
 import logging
 
 from app.constants import *
-from app.data import Game, Player, Question, Declaration
+from app.data.game_data import Game, Player
+from app.data.turn_data import Question, Declaration
 from app.util import Optional
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ def joined_game(game: Game) -> Dict:
     return {
         MESSAGE_TYPE: JOINED_GAME,
         DATA: {
+            PIN: game.pin,
             TEAMS_KEY: formatted_teams(game)
         }
     }
@@ -31,6 +33,7 @@ def game_update(game: Game, player: Player) -> Dict:
     contents = {
         MESSAGE_TYPE: GAME_UPDATE,
         DATA: {
+            PIN: game.pin,
             PLAYER: {
                 NAME: player.name,
                 CARDS: player.get_cards()
@@ -41,6 +44,7 @@ def game_update(game: Game, player: Player) -> Dict:
     }
 
     if opt_turn.is_present():
+        # could be instance of Question or Declaration
         turn = opt_turn.get()
         turn_type = TURN if isinstance(turn, Question) else DECLARATION
         contents[DATA][LAST_TURN] = {

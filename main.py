@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 import logging
 from typing import Any
 
-from app.network import Server
+from app.server import Server
 
 # TODO improve middleware
 middleware = [

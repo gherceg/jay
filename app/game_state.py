@@ -1,9 +1,9 @@
 import logging
 from pandas import DataFrame
-import random
-from typing import List
+from typing import List, Dict
 
-from app.data import Question, Declaration, CardStatus, CardSet
+from app.data.turn_data import Question, Declaration
+from app.data.game_enums import CardStatus, CardSet
 from app.util import util_methods, data_frame_methods, Optional
 from app.constants import *
 
@@ -32,7 +32,7 @@ def update_player_state_for_declaration(state: DataFrame, declaration: Declarati
     return state
 
 
-def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: tuple):
+def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: List[str]):
     """Update column for player to DOES_HAVE for all cards specified, and DOES_NOT_HAVE for remaining rows"""
 
     # start by setting player's entire column to does not have
@@ -108,7 +108,7 @@ def process_of_elimination(state: DataFrame, row: str) -> DataFrame:
         if len(leftover_columns) != 1:
             raise Exception('Should not be possible')
         column_to_update = leftover_columns.index[0]
-        state = data_frame_methods.update_rows_to_value_for_column(state, (row,), column_to_update,
+        state = data_frame_methods.update_rows_to_value_for_column(state, [row], column_to_update,
                                                                    CardStatus.DOES_HAVE)
     return state
 
@@ -129,7 +129,7 @@ def get_players_out_of_cards(state: DataFrame) -> List[str]:
     return players
 
 
-def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optional[tuple]:
+def able_to_declare(state: DataFrame, team: List[str], card_set: CardSet) -> Optional[List[Dict[str, str]]]:
     declared_map = []
     for card in card_set.value:
         team_rows = state.loc[card, list(team)]
@@ -141,4 +141,4 @@ def able_to_declare(state: DataFrame, team: tuple, card_set: CardSet) -> Optiona
             pair = {CARD: card, PLAYER: team_has_card.keys()[0]}
             declared_map.append(pair)
 
-    return Optional(tuple(declared_map))
+    return Optional(declared_map)

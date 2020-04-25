@@ -1,11 +1,10 @@
 from pandas import Series, DataFrame
 import logging
 
-# TODO: currently dependent on importing Server first, understand why order matters for your imports
 from app import game_state
-from app.util import data_frame_methods
-from app.util import util_methods
-from app.data import CardStatus, CardSet, Question
+from app.util import data_frame_methods, util_methods
+from app.data.game_enums import CardSet, CardStatus
+from app.data.turn_data import Question
 from app.constants import *
 
 logger = logging.getLogger(__name__)
@@ -16,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def test_default_state_row_count():
-    players = ("a", "b", "c")
+    players = ["a", "b", "c"]
     expected_row_count = 0
     for card_set in CardSet:
         expected_row_count += len(card_set.value)
@@ -26,7 +25,7 @@ def test_default_state_row_count():
 
 
 def test_default_state_column_count():
-    players = ("a", "b", "c")
+    players = ["a", "b", "c"]
     expected_column_count = len(players)
 
     state: DataFrame = game_state.create_default_state(players)
@@ -35,7 +34,7 @@ def test_default_state_column_count():
 
 
 def test_default_state_values():
-    players = ("a", "b", "c")
+    players = ["a", "b", "c"]
 
     state: DataFrame = game_state.create_default_state(players)
     series_a: Series = state["a"].value_counts()
@@ -52,8 +51,8 @@ def test_default_state_values():
 
 
 def test_update_state_for_cards():
-    players = ('a', 'b', 'c')
-    cards = ('2s', '4c', '9h', 'ad')
+    players = ["a", "b", "c"]
+    cards = ['2s', '4c', '9h', 'ad']
     state: DataFrame = game_state.create_default_state(players)
     state = game_state.update_state_upon_receiving_cards(state, 'a', cards)
     for card in util_methods.deck_of_cards():
@@ -64,10 +63,10 @@ def test_update_state_for_cards():
 
 
 def test_declaration_check():
-    players = ('a', 'b', 'c')
-    cards_for_a = ('2s', '4s')
-    cards_for_b = ('3s', '5s')
-    cards_for_c = ('6s', '7s')
+    players = ["a", "b", "c"]
+    cards_for_a = ['2s', '4s']
+    cards_for_b = ['3s', '5s']
+    cards_for_c = ['6s', '7s']
     expected_declared_map = ({CARD: '2s', PLAYER: 'a'},
                              {CARD: '3s', PLAYER: 'b'},
                              {CARD: '4s', PLAYER: 'a'},
@@ -88,7 +87,7 @@ def test_declaration_check():
 
 
 def test_process_of_elimination():
-    players = ('a', 'b', 'c','d')
+    players = ["a", "b", "c", "d"]
     cards = ('ah',)
 
     state: DataFrame = game_state.create_default_state(players)
@@ -101,8 +100,9 @@ def test_process_of_elimination():
     print(state)
     assert state.loc['ah', 'd'] == CardStatus.DOES_HAVE
 
+
 def test_process_of_elimination_does_not_update():
-    players = ('a', 'b', 'c', 'd')
+    players = ["a", "b", "c", "d"]
     cards = ('ah',)
 
     state: DataFrame = game_state.create_default_state(players)
@@ -118,7 +118,7 @@ def test_process_of_elimination_does_not_update():
 
 
 def test_players_out_of_cards():
-    players = ('a', 'b', 'c', 'd')
+    players = ["a", "b", "c", "d"]
     cards_for_a = ('2s', '4s')
     cards_for_b = ('3s', '5s')
     cards_for_c = ('6s',)

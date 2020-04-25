@@ -2,7 +2,8 @@ import logging
 from typing import List
 
 from app.constants import *
-from app.data import Game,Player, CardSet
+from app.data.game_data import Game, Player
+from app.data.game_enums import CardSet
 from app.util import Optional, util_methods
 
 logger = logging.getLogger(__name__)

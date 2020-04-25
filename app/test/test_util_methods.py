@@ -1,5 +1,5 @@
 from app.util import util_methods
-from app.data import CardSet
+from app.data.game_enums import CardSet
 
 
 # Tests for set_for_card(card) util method
@@ -97,12 +97,12 @@ def test_distribute_cards_raises_exception():
 
 
 def test_eligible_sets():
-    cards = ('2s', '2d', '2h', '2c', 'as', 'ad', 'ah', 'ac')
+    cards = ['2s', '2d', '2h', '2c', 'as', 'ad', 'ah', 'ac']
     eligible_sets = util_methods.eligible_sets(cards)
     assert len(eligible_sets) == 8
 
 
 def test_eligible_sets_for_duplicates():
-    cards = ('2s', '3s', '4s', '5s', '6s', '7s')
+    cards = ['2s', '3s', '4s', '5s', '6s', '7s']
     eligible_sets = util_methods.eligible_sets(cards)
     assert len(eligible_sets) == 1

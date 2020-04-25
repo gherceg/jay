@@ -1,4 +1,4 @@
-from app.data import CardSet
+from app.data.game_enums import CardSet
 
 
 def test_low_spades():

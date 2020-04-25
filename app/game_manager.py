@@ -4,11 +4,13 @@ import random
 import asyncio
 from typing import Dict, List
 
-from app.data import Question, Declaration, CardSet, Team, Player, Game
-from app.network import NetworkDelegate, network_methods
+from app.data.game_enums import CardSet
+from app.data.game_data import Game, Player, Team
+from app.data.turn_data import Declaration, Question
+from app.data.network_data import NetworkDelegate
 from app.constants import *
 from app.util import Optional
-from app import message_builder, message_validation, game_state, computer_player as cpm
+from app import message_builder, message_validation, game_state, computer_player as cpm, network_methods
 
 logger = logging.getLogger(__name__)
 
@@ -181,30 +183,30 @@ class GameManager:
             if player not in team.player_names:
                 return team.name
 
-    def get_opponents_names_in_play(self, player: Player) -> tuple:
+    def get_opponents_names_in_play(self, player: Player) -> List[str]:
         eligible_players = []
         for temp_player in self.game.players.values():
             if temp_player.team_name != player.team_name and temp_player.in_play:
                 eligible_players.append(temp_player.name)
 
-        return tuple(eligible_players)
+        return eligible_players
 
-    def get_opponents_in_play(self, player: Player) -> tuple:
+    def get_opponents_in_play(self, player: Player) -> List[Player]:
         eligible_players = []
         for temp_player in self.game.players.values():
             if temp_player.team_name != player.team_name and temp_player.in_play:
                 eligible_players.append(temp_player)
 
-        return tuple(eligible_players)
+        return eligible_players
 
-    def get_teammates_in_play(self, player: Player) -> tuple:
+    def get_teammates_in_play(self, player: Player) -> List[Player]:
         eligible_players = []
         for temp_player in self.game.players.values():
             logger.info(f'Finding eligible teammates: {temp_player.name} on team {temp_player.team_name}')
             if temp_player.team_name == player.team_name and temp_player.in_play:
                 eligible_players.append(temp_player)
 
-        return tuple(eligible_players)
+        return eligible_players
 
     # PRIVATE METHODS
 

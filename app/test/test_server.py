@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 from main import app
-from app.test.TestVariables import TestVariables
+from app.test.test_classes import TestVariables
 
 from app.constants import *
 

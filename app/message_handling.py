@@ -1,12 +1,12 @@
 from starlette.websockets import WebSocket
 import logging
 
-from app.game import GameManager
-from app.data import Game
+from app.game_manager import GameManager
+from app.data.game_data import Game
 from app.constants import *
-from app import message_validation, message_builder, game_builder
+from app import message_validation, message_builder, game_builder, network_methods
 from app.util import util_methods
-from app.network import network_methods, NetworkDelegate
+from app.data.network_data import NetworkDelegate
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def handle_select_player_request(websocket: WebSocket, game: Game, data: d
 
         await network_methods.send_message(websocket, data_to_send)
     else:
-        await network_methods.send_error('Select Player Request: Missing name field')
+        await network_methods.send_error(websocket, 'Select Player Request: Missing name field')
 
 
 # TODO phase out game manager, use Game dataclass with methods to update

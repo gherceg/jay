@@ -1,6 +1,12 @@
 from typing import Dict
 
-from app.network import NetworkDelegate
+from app.data.network_data import NetworkDelegate
+
+
+class TestVariables:
+
+    def __init__(self, player_names: tuple):
+        self.player_names = player_names
 
 
 class MockNetworkDelegate(NetworkDelegate):

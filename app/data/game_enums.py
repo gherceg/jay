@@ -10,3 +10,11 @@ class CardSet(enum.Enum):
     HIGH_CLUBS = ('9c', '10c', 'jc', 'qc', 'kc', 'ac')
     HIGH_DIAMONDS = ('9d', '10d', 'jd', 'qd', 'kd', 'ad')
     HIGH_HEARTS = ('9h', '10h', 'jh', 'qh', 'kh', 'ah')
+
+
+class CardStatus(enum.Enum):
+    UNKNOWN = 0
+    DOES_NOT_HAVE = 1
+    MIGHT_HAVE = 2
+    DOES_HAVE = 3
+    DECLARED = 4
