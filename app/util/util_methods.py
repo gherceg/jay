@@ -6,6 +6,10 @@ from app.util import Optional
 from app.constants import *
 
 
+def client_identifier(player_id: str, game_id: str) -> str:
+    return f'{game_id}_{player_id}'
+
+
 def eligible_sets(cards: List[str]) -> List[CardSet]:
     sets = set()
     for card in cards:

@@ -1,10 +1,14 @@
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Tuple
 from pandas import DataFrame
+import logging
 
 from app.constants import *
-from app.util import Optional
+from app.util import Optional, util_methods
+from app.data.game_enums import CardSet
 # ideally would not need this and just set cards on the player
-from app.game_state_updates import get_cards_for_player
+from app.game_state_methods import get_cards_for_player
+
+logger = logging.getLogger(__name__)
 
 
 class Player:
@@ -47,14 +51,21 @@ class Team:
 class Game:
 
     def __init__(self, pin: int, players: Dict[str, Player], teams: Dict[str, Team], state: DataFrame,
+                 ledger: List[str],
                  up_next: Optional[str], options: Set[str]):
         self.pin = pin
         self.players = players
         self.teams = teams
-        self.ledger = []
+        self.ledger = ledger
         self.state = state
         self.options = options
         self.player_up_next: Optional[str] = up_next
+
+    def up_next(self) -> Optional[Player]:
+        if self.player_up_next.is_present() and self.player_up_next.get() in self.players.keys():
+            return Optional(self.players[self.player_up_next.get()])
+        else:
+            return Optional.empty()
 
     @property
     def virtual_deck(self) -> bool:

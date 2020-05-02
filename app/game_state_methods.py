@@ -2,7 +2,7 @@ import logging
 from pandas import DataFrame
 from typing import List, Dict
 
-from app.data.turn_data import Question, Declaration
+from app.data.turn import Question, Declaration
 from app.data.game_enums import CardStatus, CardSet
 from app.util import util_methods, data_frame_methods, Optional
 from app.constants import *
@@ -19,7 +19,7 @@ def create_default_state(players: List[str]) -> DataFrame:
 
 
 def update_player_state_for_question(state: DataFrame, question: Question, players_out: List[str]) -> DataFrame:
-    state = update_state_with_turn(state, question)
+    state = update_state_with_question(state, question)
     state = update_state_with_players_out_of_cards(state, players_out)
     state = check_for_process_of_elimination(state)
     return state
@@ -32,7 +32,7 @@ def update_player_state_for_declaration(state: DataFrame, declaration: Declarati
     return state
 
 
-def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: List[str]):
+def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: List[str]) -> DataFrame:
     """Update column for player to DOES_HAVE for all cards specified, and DOES_NOT_HAVE for remaining rows"""
 
     # start by setting player's entire column to does not have
@@ -54,7 +54,7 @@ def update_state_upon_receiving_cards(state: DataFrame, player: str, cards: List
     return state
 
 
-def update_state_with_turn(state: DataFrame, question: Question) -> DataFrame:
+def update_state_with_question(state: DataFrame, question: Question) -> DataFrame:
     card_set: CardSet = util_methods.set_for_card(question.card)
 
     if question.outcome:

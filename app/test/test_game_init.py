@@ -1,9 +1,9 @@
 from pandas import DataFrame
 
 from app import game_builder
-from app.data.game_data import Team
+from app.data.game import Team
 from app.constants import *
-import app.game_state_updates as game_state
+import app.game_state_methods as game_state
 
 
 def test_network_player_setup():
@@ -51,7 +51,7 @@ def test_player_setup_invalid_type_raises_exception():
                     {"name": "p3", "type": "computer", "team": "t1"},
                     {"name": "p4", "type": "computer", "team": "t2"},
                     {"name": "p5", "type": "computer", "team": "t2"},
-                    {"name": "p6", "type": "computer", "team": "t2"})
+                    {"name": "p6", "type": "adfas", "team": "t2"})
     })
 
     teams = Team("t1", ("p1", "p2", "p3"), 0), Team("t2", ("p4", "p5", "p6"), 0)

@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from typing import Dict
 
 from main import app
 from app.test.test_classes import TestVariables
@@ -13,22 +14,28 @@ test_variables = TestVariables(('a', 'b', 'c', 'd', 'e', 'f'))
 def test_game_creation():
     with client.websocket_connect("/ws") as websocket:
         websocket.send_json(create_game_json())
-        data = websocket.receive_json()
-        assert data == expected_create_game_response()
+        expected_response: Dict = expected_create_game_response()
+        actual_response: Dict = websocket.receive_json()
+        assert actual_response[TYPE] == expected_response[TYPE]
+        assert DATA in actual_response
+        assert PIN in actual_response[DATA].keys()
+        assert isinstance(actual_response[DATA][PIN], int)
 
 
 def test_enter_pin():
+    pin: int
     with client.websocket_connect("/ws") as websocket:
         websocket.send_json(create_game_json())
+        response: Dict = websocket.receive_json()
+        pin = response[DATA][PIN]
 
     with client_two.websocket_connect("/ws") as websocket:
-        websocket.send_json(enter_pin_json())
-        data: dict = websocket.receive_json()
-        # ensure that next_turn is a valid player name
-        message_data = data[DATA]
-
-        #TODO update these tests
-        assert False
+        websocket.send_json(enter_pin_json(pin))
+        expected: Dict = expected_joined_game_response()
+        actual: Dict = websocket.receive_json()
+        assert actual[TYPE] == expected[TYPE]
+        assert DATA in actual
+        assert actual[DATA].keys() == expected[DATA].keys()
 
 
 def create_game_json() -> dict:
@@ -47,22 +54,23 @@ def create_game_json() -> dict:
             }
 
 
-def enter_pin_json() -> dict:
+def enter_pin_json(pin: int = 1234) -> dict:
     return {'type': 'enter_pin',
-            'data': {'pin': 1234}
+            'data': {'pin': pin}
             }
 
 
-def select_player_json() -> dict:
+def select_player_json(pin: int = 1234) -> dict:
     return {'type': 'select_player',
             'data': {
+                'pin': pin,
                 'name': 'a',
                 'cards': ['9h', '10h', 'jh', 'qh', 'kh', 'ah', '2s', '3s']
             }
             }
 
 
-def expected_create_game_response() -> dict:
+def expected_create_game_response() -> Dict:
     return {'type': 'created_game',
             'data': {
                 'pin': 1234,
@@ -70,9 +78,10 @@ def expected_create_game_response() -> dict:
             }
 
 
-def expected_joined_game_response() -> dict:
+def expected_joined_game_response() -> Dict:
     return {'type': 'joined_game',
-            'data': {'teams': [{'name': 'team1', 'players': ['a', 'b', 'c']},
+            'data': {'pin': 1234,
+                     'teams': [{'name': 'team1', 'players': ['a', 'b', 'c']},
                                {'name': 'team2', 'players': ['d', 'e', 'f']}],
                      }
             }

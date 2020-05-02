@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 import logging
 from typing import Any
 
-from app.server import Server
+from app.app_controller import AppController
 
 # TODO improve middleware
 middleware = [
@@ -15,7 +15,7 @@ middleware = [
 
 # create app and server
 app = FastAPI(middleware=middleware)
-server = Server()
+controller = AppController()
 
 # setup logging
 logging.root.setLevel(logging.INFO)
@@ -33,12 +33,13 @@ class WebSocket(WebSocketEndpoint):
 
     async def on_connect(self, websocket: WebSocket) -> None:
         logger.debug(f'Connected websocket {websocket.client}')
+        controller.new_connection(websocket)
         await websocket.accept()
 
     async def on_receive(self, websocket: WebSocket, data: Any) -> None:
         logger.debug(f'Received message from websocket {websocket.client}')
-        await server.handle_message(websocket, data)
+        await controller.handle_message(websocket, data)
 
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
         logger.debug(f'Disconnected websocket {websocket.client}')
-        server.remove(websocket)
+        controller.remove(websocket)

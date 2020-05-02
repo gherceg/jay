@@ -3,16 +3,46 @@ import random
 from pandas import DataFrame
 from typing import List, Dict
 
-from app import game_state_updates
+from app import game_state_methods, game_data_methods
 from app.data.game_enums import CardSet, CardStatus
-from app.data.game_data import Player
-from app.util import util_methods
+from app.data.game import Game, Player
+from app.util import util_methods, Optional
 from app.constants import *
 
 logger = logging.getLogger(__name__)
 
 
-def generate_turn(player: Player, eligible_player_names: List[str]) -> dict:
+def automate_turn(game: Game, algorithm: str = 'simple') -> Dict:
+    opt_player: Optional[Player] = game.up_next()
+    if opt_player.is_empty():
+        logger.error(f'No player is up next. {game.player_up_next.get()}')
+        return {}
+    player: Player = opt_player.get()
+
+    generated_turn: Dict = generate_turn(player, game_data_methods.get_opponents_names_in_play(game, player), game)
+
+    # DEBUG
+    verify_cards_left_makes_sense(game)
+
+    return generated_turn
+
+
+# DEBBUG Method
+def verify_cards_left_makes_sense(game: Game):
+    card_count = 0
+    for player in game.players.values():
+        card_count += len(player.get_cards())
+
+    sets_declared = 0
+    for team in game.teams.values():
+        sets_declared += team.sets_won
+    expected_card_count = 48 - (sets_declared * 6)
+
+    if card_count != expected_card_count:
+        logger.error('Card Count Mismatch!')
+
+
+def generate_turn(player: Player, eligible_player_names: List[str], game: Game) -> Dict:
     team_players = (player.name,) + player.teammates
     set_to_declare = None
     highest_score = -1
@@ -25,26 +55,26 @@ def generate_turn(player: Player, eligible_player_names: List[str]) -> dict:
 
     if len(eligible_player_names) == 0:
         # have to declare
-        return attempt_to_declare(player)
+        return attempt_to_declare(player, game)
 
     # first check if computer knows where all of the cards of a certain set are
     team_players = (player.name,) + player.teammates
     for card_set in CardSet:
-        opt_declared_map = game_state_updates.able_to_declare(player.state, team_players, card_set)
+        opt_declared_map = game_state_methods.able_to_declare(player.state, team_players, card_set)
         if opt_declared_map.is_present():
-            return declaration_dict(player.name, card_set, opt_declared_map.get())
+            return declaration_dict(game, player.name, card_set, opt_declared_map.get())
 
     # could not declare, so ask a question
     eligible_cards = util_methods.eligible_cards(player.get_cards())
     logger.debug(f'Eligible players names: {eligible_player_names}')
     card, player_to_ask = get_eligible_question_pair(player.state, eligible_cards, eligible_player_names)
     if card is not None and player_to_ask is not None:
-        return question_dict(player.name, player_to_ask, card)
+        return question_dict(game, player.name, player_to_ask, card)
     else:
-        return attempt_to_declare(player)
+        return attempt_to_declare(player, game)
 
 
-def attempt_to_declare(player: Player) -> dict:
+def attempt_to_declare(player: Player, game: Game) -> Dict:
     team_players = (player.name,) + player.teammates
     set_to_declare = None
     highest_score = -1
@@ -78,7 +108,7 @@ def attempt_to_declare(player: Player) -> dict:
         pair = {CARD: card, PLAYER: player_for_card}
         declared_map.append(pair)
 
-    return declaration_dict(player.name, set_to_declare, declared_map)
+    return declaration_dict(game, player.name, set_to_declare, declared_map)
 
 
 def score_declaration_for_set(state: DataFrame, team: tuple, card_set: CardSet) -> int:
@@ -138,19 +168,25 @@ def get_eligible_question_pair(state: DataFrame, cards_to_ask_for: List[str], op
         raise Exception('No options left')
 
 
-def declaration_dict(name: str, card_set: CardSet, declared_map: List[Dict[str, str]]) -> dict:
+def declaration_dict(game: Game, name: str, card_set: CardSet, declared_map: List[Dict[str, str]]) -> Dict:
     return {
-        TURN_TYPE: DECLARATION,
-        NAME: name,
-        CARD_SET: card_set,
-        DECLARED_MAP: declared_map
+        MESSAGE_TYPE: DECLARATION,
+        DATA: {
+            PIN: game.pin,
+            NAME: name,
+            CARD_SET: util_methods.key_for_card_set(card_set),
+            DECLARED_MAP: declared_map
+        }
     }
 
 
-def question_dict(questioner: str, respondent: str, card: str) -> dict:
+def question_dict(game: Game, questioner: str, respondent: str, card: str) -> Dict:
     return {
-        TURN_TYPE: QUESTION,
-        QUESTIONER: questioner,
-        RESPONDENT: respondent,
-        CARD: card
+        MESSAGE_TYPE: QUESTION,
+        DATA: {
+            PIN: game.pin,
+            QUESTIONER: questioner,
+            RESPONDENT: respondent,
+            CARD: card
+        }
     }

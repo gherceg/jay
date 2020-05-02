@@ -2,11 +2,21 @@ from typing import Dict
 import logging
 
 from app.constants import *
-from app.data.game_data import Game, Player
-from app.data.turn_data import Question, Declaration
+from app.data.game import Game, Player
+from app.data.turn import Question, Declaration
 from app.util import Optional
 
 logger = logging.getLogger(__name__)
+
+
+def error(message: str) -> Dict:
+    logger.error(message)
+    return {
+        MESSAGE_TYPE: ERROR,
+        DATA: {
+            DESCRIPTION: message
+        }
+    }
 
 
 def created_game(game: Game) -> Dict:

@@ -1,7 +1,4 @@
 from app import game_builder
-from app.test.test_classes import MockNetworkDelegate
-
-mock_network_delegate = MockNetworkDelegate()
 
 
 def test_game_factory_create():

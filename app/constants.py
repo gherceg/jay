@@ -1,4 +1,4 @@
-# Message Keys
+# Generic Message Keys
 MESSAGE_TYPE = "type"
 PLAYER_TYPE = "type"
 DATA = "data"
@@ -41,9 +41,6 @@ TYPE = "type"
 TURN = "turn"
 LAST_TURN = "last_turn"
 
-# computer generation keys
-TURN_TYPE = "turn_type"
-
 # card_set values
 LOW_SPADES_KEY = "low_spades"
 HIGH_SPADES_KEY = "high_spades"
@@ -54,5 +51,4 @@ HIGH_HEARTS_KEY = "high_hearts"
 LOW_DIAMONDS_KEY = "low_diamonds"
 HIGH_DIAMONDS_KEY = "high_diamonds"
 
-COMPUTER_WAIT_TIME = 7
-
+COMPUTER_WAIT_TIME = 5

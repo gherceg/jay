@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from app.constants import *
-from app.data.game_data import Game, Player
+from app.data.game import Game, Player
 from app.data.game_enums import CardSet
 from app.util import Optional, util_methods
 

@@ -1,14 +1,16 @@
+from typing import List, Tuple
+
 from app.data.game_enums import CardSet
 from app.util import util_methods
 from app.constants import *
 
 
 class Declaration:
-    def __init__(self, player: str, card_set: CardSet, declared_list: tuple, outcome: bool):
-        self.player = player
-        self.card_set = card_set
-        self.declared_list = declared_list
-        self.outcome = outcome
+    def __init__(self, player: str, card_set: CardSet, declared_list: List[Tuple[str, str]], outcome: bool):
+        self.player: str = player
+        self.card_set: CardSet = card_set
+        self.declared_list: List[Tuple[str, str]] = declared_list
+        self.outcome: bool = outcome
 
     def __repr__(self):
         if self.outcome:

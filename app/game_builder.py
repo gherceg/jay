@@ -4,12 +4,10 @@ import logging
 from pandas import DataFrame
 from typing import List
 
-from app.game_manager import GameManager
-from app.data.game_data import Player, Team, Game
-from app.data.network_data import NetworkDelegate
+from app.data.game import Player, Team, Game
 from app.util import util_methods, Optional
 from app.constants import *
-from app import game_state_updates
+from app import game_state_methods
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ def create_game(settings: dict) -> Game:
     # create teams if necessary
     teams = setup_teams(settings)
     # create default state
-    default_state = game_state_updates.create_default_state(player_names)
+    default_state = game_state_methods.create_default_state(player_names)
     # create players
     players = setup_players(settings, teams, default_state)
 
@@ -34,7 +32,7 @@ def create_game(settings: dict) -> Game:
         for player, hand in zip(players, cards):
             logger.info(f'Setting initial cards for {player.name} to {hand}')
             logger.info(f'Building: Player {player.name} located at {id(player)}')
-            player.state = game_state_updates.update_state_upon_receiving_cards(player.state, player.name, hand)
+            player.state = game_state_methods.update_state_upon_receiving_cards(player.state, player.name, hand)
 
     pin = random.randint(1000, 9999)
 
@@ -52,12 +50,12 @@ def create_game(settings: dict) -> Game:
 
     player_name: str = get_first_turn(players)
     state = setup_default_master_state(list(players_dict.values()))
-    game = Game(pin, players_dict, teams_dict, state, Optional(player_name), options)
+    game = Game(pin, players_dict, teams_dict, state, [], Optional(player_name), options)
 
     return game
 
 
-def setup_teams(settings: dict) -> tuple:
+def setup_teams(settings: dict) -> List[Team]:
     if TEAMS_KEY in settings:
         teams = build_teams_from_settings(settings)
     else:
@@ -68,16 +66,16 @@ def setup_teams(settings: dict) -> tuple:
 
 def setup_default_master_state(players: List[Player]) -> DataFrame:
     player_names = list(map(lambda p: p.name, players))
-    state = game_state_updates.create_default_state(player_names)
+    state = game_state_methods.create_default_state(player_names)
 
     for player in players:
         cards = player.get_cards()
-        state = game_state_updates.update_state_upon_receiving_cards(state, player.name, cards)
+        state = game_state_methods.update_state_upon_receiving_cards(state, player.name, cards)
 
     return state
 
 
-def setup_players(settings: dict, teams: tuple, default_state: DataFrame) -> tuple:
+def setup_players(settings: dict, teams: List[Team], default_state: DataFrame) -> tuple:
     """Set up each player and assign to teams"""
 
     players = []
@@ -95,7 +93,7 @@ def setup_players(settings: dict, teams: tuple, default_state: DataFrame) -> tup
     return tuple(players)
 
 
-def get_opposing_team(teams: tuple, player_name: str) -> tuple:
+def get_opposing_team(teams: List[Team], player_name: str) -> tuple:
     if len(teams) != 2:
         raise ValueError('Only have support for 2 teams')
     team_one = tuple(copy.deepcopy(teams[0].player_names))
@@ -108,7 +106,7 @@ def get_opposing_team(teams: tuple, player_name: str) -> tuple:
         raise ValueError(f'Could not find team for player {player_name}')
 
 
-def get_teammates(teams: tuple, player_name: str) -> tuple:
+def get_teammates(teams: List[Team], player_name: str) -> tuple:
     if len(teams) != 2:
         raise ValueError('Only have support for 2 teams')
     team_one_players = list(copy.deepcopy(teams[0].player_names))
@@ -123,18 +121,18 @@ def get_teammates(teams: tuple, player_name: str) -> tuple:
         raise ValueError(f'Could not find team for player {player_name}')
 
 
-def build_teams_from_settings(settings: dict) -> tuple:
+def build_teams_from_settings(settings: dict) -> List[Team]:
     teams_from_settings = settings[TEAMS_KEY]
-    teams = []
+    teams: List[Team] = []
     for team_entry in teams_from_settings:
         logger.info(f'Creating team {team_entry[NAME]}')
         temp_team = Team(team_entry[NAME], team_entry[PLAYERS], 0)
         teams.append(temp_team)
 
-    return tuple(teams)
+    return teams
 
 
-def generate_teams(players: list) -> tuple:
+def generate_teams(players: list) -> List[Team]:
     player_names = []
     for player in players:
         player_names.append(player[NAME])
@@ -142,9 +140,8 @@ def generate_teams(players: list) -> tuple:
     random.shuffle(player_names)
     # force int division
     half = len(player_names) // 2
-    # return [{'name': "Team 1", "players": player_names[:half]},
-    #         {"name": "Team 2", "players": player_names[half:]}]
-    return Team("Team 1", tuple(player_names[:half]), 0), Team("Team 2", tuple(player_names[half:]), 0)
+
+    return [Team("Team 1", tuple(player_names[:half]), 0), Team("Team 2", tuple(player_names[half:]), 0)]
 
 
 def get_first_turn(players: tuple) -> str:
