@@ -6,14 +6,14 @@ mock_network_delegate = MockNetworkDelegate()
 
 def test_game_factory_create():
     settings = mock_game_settings(True, True)
-    game_manager = game_builder.create_game(mock_network_delegate, settings)
-    assert len(game_manager.game.players) == 6
+    game = game_builder.create_game(settings)
+    assert len(game.players) == 6
 
 
 def test_game_factory_create_no_cards():
     settings = mock_game_settings(False, True)
-    game_manager = game_builder.create_game(mock_network_delegate, settings)
-    for (key, player) in game_manager.game.players.items():
+    game = game_builder.create_game(settings)
+    for (key, player) in game.players.items():
         assert not player.get_cards()
 
 

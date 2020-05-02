@@ -10,7 +10,7 @@ from app.data.turn_data import Declaration, Question
 from app.data.network_data import NetworkDelegate
 from app.constants import *
 from app.util import Optional
-from app import message_builder, message_validation, game_state, computer_player as cpm, network_methods
+from app import message_builder, message_validation, game_state_updates, computer_player as cpm, network_methods
 
 logger = logging.getLogger(__name__)
 
@@ -18,16 +18,9 @@ logger = logging.getLogger(__name__)
 class GameManager:
     """Responsible for managing a game and its players"""
 
-    def __init__(self, pin: int, network_delegate: NetworkDelegate, players: Dict[str, Player], teams: Dict[str, Team],
-                 virtual_deck: bool):
+    def __init__(self, network_delegate: NetworkDelegate, game: Game):
         self.network_delegate = network_delegate
-
-        options = set()
-        if virtual_deck:
-            options.add(VIRTUAL_DECK)
-
-        state = self.setup_default_master_state(list(players.values()))
-        self.game = Game(pin, players, teams, state, Optional.empty(), options)
+        self.game = game
 
     async def handle_declaration(self, player: str, card_set: CardSet, declared_list: list):
         """Determines declaration outcome, updates game, requests to send up via delegate"""
@@ -108,19 +101,19 @@ class GameManager:
 
     def update_state_for_declaration(self, declaration: Declaration):
         # update game's state
-        self.game.state = game_state.update_state_with_declaration(self.game.state, declaration)
+        self.game.state = game_state_updates.update_state_with_declaration(self.game.state, declaration)
 
-        players_out = game_state.get_players_out_of_cards(self.game.state)
+        players_out = game_state_updates.get_players_out_of_cards(self.game.state)
         for key, player in self.game.players.items():
-            player.state = game_state.update_player_state_for_declaration(player.state, declaration, players_out)
+            player.state = game_state_updates.update_player_state_for_declaration(player.state, declaration, players_out)
 
     def update_state_for_question(self, question: Question):
         # update game's state
-        self.game.state = game_state.update_state_with_turn(self.game.state, question)
+        self.game.state = game_state_updates.update_state_with_turn(self.game.state, question)
 
-        players_out = game_state.get_players_out_of_cards(self.game.state)
+        players_out = game_state_updates.get_players_out_of_cards(self.game.state)
         for key, player in self.game.players.items():
-            player.state = game_state.update_player_state_for_question(player.state, question, players_out)
+            player.state = game_state_updates.update_player_state_for_question(player.state, question, players_out)
 
     async def send_game_update(self):
         logger.info(f'Sending game update to all clients')
@@ -161,7 +154,7 @@ class GameManager:
         return list(self.game.players.keys())
 
     def get_player_cards(self, player: str) -> List[str]:
-        return game_state.get_cards_for_player(self.game.state, player)
+        return game_state_updates.get_cards_for_player(self.game.state, player)
 
     def get_player_type(self, player: str) -> str:
         return self.game.players[player].player_type
@@ -208,16 +201,6 @@ class GameManager:
         return eligible_players
 
     # PRIVATE METHODS
-
-    def setup_default_master_state(self, players: List[Player]) -> DataFrame:
-        player_names = list(map(lambda p: p.name, players))
-        state = game_state.create_default_state(player_names)
-
-        for player in players:
-            cards = player.get_cards()
-            state = game_state.update_state_upon_receiving_cards(state, player.name, cards)
-
-        return state
 
     def determine_player_up_next_after_declaration(self, player: Player, outcome: bool) -> Optional[str]:
         eligible_opponents = self.get_opponents_in_play(player)

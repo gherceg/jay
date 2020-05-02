@@ -3,7 +3,7 @@ import random
 from pandas import DataFrame
 from typing import List, Dict
 
-from app import game_state
+from app import game_state_updates
 from app.data.game_enums import CardSet, CardStatus
 from app.data.game_data import Player
 from app.util import util_methods
@@ -30,7 +30,7 @@ def generate_turn(player: Player, eligible_player_names: List[str]) -> dict:
     # first check if computer knows where all of the cards of a certain set are
     team_players = (player.name,) + player.teammates
     for card_set in CardSet:
-        opt_declared_map = game_state.able_to_declare(player.state, team_players, card_set)
+        opt_declared_map = game_state_updates.able_to_declare(player.state, team_players, card_set)
         if opt_declared_map.is_present():
             return declaration_dict(player.name, card_set, opt_declared_map.get())
 

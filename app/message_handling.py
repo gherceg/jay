@@ -2,9 +2,9 @@ from starlette.websockets import WebSocket
 import logging
 
 from app.game_manager import GameManager
-from app.data.game_data import Game
+from app.data.game_data import Game, Player
 from app.constants import *
-from app import message_validation, message_builder, game_builder, network_methods
+from app import message_validation, message_builder, game_builder, network_methods, game_updates
 from app.util import util_methods
 from app.data.network_data import NetworkDelegate
 
@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 async def handle_create_game_request(delegate: NetworkDelegate, websocket: WebSocket, data: dict) -> GameManager:
-    game_manager = game_builder.create_game(delegate, data)
-    logger.info('Create Game Request: created new game with pin {0}'.format(game_manager.game.pin))
-    data_to_send = message_builder.created_game(game_manager.game)
+    game = game_builder.create_game(data)
+    logger.info('Create Game Request: created new game with pin {0}'.format(game.pin))
+    data_to_send = message_builder.created_game(game)
     await network_methods.send_message(websocket, data_to_send)
-    return game_manager
+    return GameManager(delegate, game)
 
 
 async def handle_enter_pin_request(websocket: WebSocket, game: Game):
@@ -47,7 +47,6 @@ async def handle_question(websocket: WebSocket, game_manager: GameManager, data:
         await network_methods.send_error(websocket, error.get())
     else:
         # update game for question
-        # based on updated game, send out game update message, and automate next turn if necessary
         await game_manager.handle_question(data[QUESTIONER], data[RESPONDENT], data[CARD])
 
 

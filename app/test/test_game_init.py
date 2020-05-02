@@ -3,7 +3,7 @@ from pandas import DataFrame
 from app import game_builder
 from app.data.game_data import Team
 from app.constants import *
-import app.game_state as game_state
+import app.game_state_updates as game_state
 
 
 def test_network_player_setup():

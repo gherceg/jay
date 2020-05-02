@@ -2,18 +2,19 @@ import copy
 import random
 import logging
 from pandas import DataFrame
+from typing import List
 
 from app.game_manager import GameManager
-from app.data.game_data import Player, Team
+from app.data.game_data import Player, Team, Game
 from app.data.network_data import NetworkDelegate
-from app.util import util_methods
+from app.util import util_methods, Optional
 from app.constants import *
-from app import game_state
+from app import game_state_updates
 
 logger = logging.getLogger(__name__)
 
 
-def create_game(network_delegate: NetworkDelegate, settings: dict) -> GameManager:
+def create_game(settings: dict) -> Game:
     """Given a dictionary containing game settings, setup a new game and create the players"""
 
     player_names = []
@@ -23,7 +24,7 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> GameManage
     # create teams if necessary
     teams = setup_teams(settings)
     # create default state
-    default_state = game_state.create_default_state(player_names)
+    default_state = game_state_updates.create_default_state(player_names)
     # create players
     players = setup_players(settings, teams, default_state)
 
@@ -33,7 +34,7 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> GameManage
         for player, hand in zip(players, cards):
             logger.info(f'Setting initial cards for {player.name} to {hand}')
             logger.info(f'Building: Player {player.name} located at {id(player)}')
-            player.state = game_state.update_state_upon_receiving_cards(player.state, player.name, hand)
+            player.state = game_state_updates.update_state_upon_receiving_cards(player.state, player.name, hand)
 
     pin = random.randint(1000, 9999)
 
@@ -44,10 +45,15 @@ def create_game(network_delegate: NetworkDelegate, settings: dict) -> GameManage
     players_dict = {}
     for player in players:
         players_dict[player.name] = player
-    game = GameManager(pin, network_delegate, players_dict, teams_dict, settings[VIRTUAL_DECK])
+
+    options = set()
+    if settings[VIRTUAL_DECK]:
+        options.add(VIRTUAL_DECK)
 
     player_name: str = get_first_turn(players)
-    game.set_player_to_start(player_name)
+    state = setup_default_master_state(list(players_dict.values()))
+    game = Game(pin, players_dict, teams_dict, state, Optional(player_name), options)
+
     return game
 
 
@@ -58,6 +64,17 @@ def setup_teams(settings: dict) -> tuple:
         teams = generate_teams(settings[PLAYERS])
 
     return teams
+
+
+def setup_default_master_state(players: List[Player]) -> DataFrame:
+    player_names = list(map(lambda p: p.name, players))
+    state = game_state_updates.create_default_state(player_names)
+
+    for player in players:
+        cards = player.get_cards()
+        state = game_state_updates.update_state_upon_receiving_cards(state, player.name, cards)
+
+    return state
 
 
 def setup_players(settings: dict, teams: tuple, default_state: DataFrame) -> tuple:
@@ -71,7 +88,8 @@ def setup_players(settings: dict, teams: tuple, default_state: DataFrame) -> tup
         logger.info(f'setting up {player[NAME]}: {teammates} vs {opposing_team}')
         if player_type != NETWORK_PLAYER and player_type != COMPUTER_PLAYER:
             raise ValueError(f'Received invalid player type {player_type}')
-        player_to_add = Player(player[NAME], player[TYPE], player[TEAM], teammates, opposing_team, copy.deepcopy(default_state))
+        player_to_add = Player(player[NAME], player[TYPE], player[TEAM], teammates, opposing_team,
+                               copy.deepcopy(default_state))
         players.append(player_to_add)
 
     return tuple(players)

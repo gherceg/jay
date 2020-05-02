@@ -4,7 +4,7 @@ from pandas import DataFrame
 from app.constants import *
 from app.util import Optional
 # ideally would not need this and just set cards on the player
-from app.game_state import get_cards_for_player
+from app.game_state_updates import get_cards_for_player
 
 
 class Player:
