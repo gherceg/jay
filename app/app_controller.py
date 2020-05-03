@@ -3,7 +3,7 @@ from starlette.websockets import WebSocket, WebSocketState
 from typing import Dict
 import asyncio
 
-from app.message_handler import received_message
+from app.messages.message_handler import received_message
 from app.data.network import Client
 from app.data.app_state import MessageResult
 from app.data.game import Game

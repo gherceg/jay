@@ -8,7 +8,7 @@ from app.data.turn import Declaration, Question
 from app.data.game_enums import CardSet
 from app.constants import *
 from app.util import Optional
-from app import game_state_methods, game_data_methods
+from app.gameplay import game_state_methods, game_data_methods
 
 logger = logging.getLogger(__name__)
 

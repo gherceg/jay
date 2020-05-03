@@ -4,7 +4,7 @@ from pandas import DataFrame
 from typing import List, Dict
 
 from app.computer import computer_util
-from app import game_state_methods
+from app.gameplay import game_state_methods
 from app.data.game_enums import CardSet, CardStatus
 from app.data.game import Game, Player
 from app.util import util_methods

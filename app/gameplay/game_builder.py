@@ -7,7 +7,7 @@ from typing import List
 from app.data.game import Player, Team, Game
 from app.util import util_methods, Optional
 from app.constants import *
-from app import game_state_methods
+from app.gameplay import game_state_methods
 
 logger = logging.getLogger(__name__)
 

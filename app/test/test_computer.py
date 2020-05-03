@@ -1,8 +1,8 @@
 import logging
 from pandas import DataFrame
 
-from app import game_state_methods
-from app.computer import computer_controller as cpm, simple_computer
+from app.gameplay import game_state_methods
+from app.computer import simple_computer
 from app.util import data_frame_methods, util_methods
 from app.data.game_enums import CardStatus, CardSet
 from app.constants import *

@@ -1,11 +1,12 @@
 import logging
 from typing import Dict, List, Tuple
 
-from app import message_builder, game_builder, message_validation
+from app.gameplay import game_builder
+from app.messages import message_validation, message_builder
 from app.data.network import Client
 from app.data.app_state import MessageResult
 from app.data.game import Game
-from app.game_controller import update_game_for_question, update_game_for_declaration
+from app.gameplay.game_controller import update_game_for_question, update_game_for_declaration
 from app.constants import *
 from app.util import Optional, util_methods
 

@@ -1,4 +1,4 @@
-from app import game_builder
+from app.gameplay import game_builder
 
 
 def test_game_factory_create():
