@@ -1,7 +1,8 @@
 import logging
 from pandas import DataFrame
 
-from app import game_state_methods, computer_player as cpm
+from app import game_state_methods
+from app.computer import computer_controller as cpm, simple_computer
 from app.util import data_frame_methods, util_methods
 from app.data.game_enums import CardStatus, CardSet
 from app.constants import *
@@ -22,7 +23,7 @@ def test_eligible():
 
     players_to_ask = ['a', 'b']
     cards_to_ask = util_methods.eligible_cards(cards_for_c)
-    card, player = cpm.get_eligible_question_pair(state, cards_to_ask, players_to_ask)
+    card, player = simple_computer.get_eligible_question_pair(state, cards_to_ask, players_to_ask)
     assert card in cards_to_ask
     assert player in players_to_ask
     assert player == 'a'

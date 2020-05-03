@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List, Tuple
 
-from app import message_builder, game_builder
+from app import message_builder, game_builder, message_validation
 from app.data.network import Client
 from app.data.app_state import MessageResult
 from app.data.game import Game
@@ -78,7 +78,11 @@ def received_select_player(sender: str, data: Dict, games: Dict[int, Game],
 def received_question(sender: str, data: Dict, games: Dict[int, Game]) -> MessageResult:
     if PIN in data and data[PIN] in games.keys():
         game: Game = games[data[PIN]]
-        # TODO perform validation before processing
+
+        error: Optional[str] = message_validation.validate_question(game, data)
+        if error.is_present():
+            message = message_builder.error(error.get())
+            return MessageResult(messages=Optional([(sender, message)]))
 
         updated_game: Game = update_game_for_question(game, data[QUESTIONER], data[RESPONDENT], data[CARD])
 

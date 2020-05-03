@@ -6,8 +6,8 @@ import asyncio
 from app.message_handler import received_message
 from app.data.network import Client
 from app.data.app_state import MessageResult
-from app.data.game import Game, Player
-from app import computer_player
+from app.data.game import Game
+from app.computer import computer_controller
 from app.constants import *
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class AppController:
         # perfect scenario for recursion, but stack runs out of space so a loop will have to do
         while result.game.is_present() and result.game.get().up_next().is_present() and result.game.get().up_next().get().player_type == COMPUTER_PLAYER:
             await asyncio.sleep(COMPUTER_WAIT_TIME)
-            computer_generated_data: Dict = computer_player.automate_turn(result.game.get())
+            computer_generated_data: Dict = computer_controller.automate_turn(result.game.get())
             result: MessageResult = received_message(COMPUTER_PLAYER, computer_generated_data, self.games, self.clients)
             self.update_state_for_result(result)
             # side effect
