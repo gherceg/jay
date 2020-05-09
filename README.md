@@ -12,7 +12,8 @@ The venv module is used to create a virtual environment, and comes prepackaged w
 ### Create virtual environment
 
 To create a virtual environment, in the project root directory run:
-python -m venv jay-env
+
+`python -m venv jay-env`
 
 ### Activate the virtual environment
 

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocket
 from starlette.endpoints import WebSocketEndpoint
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -32,14 +32,10 @@ class WebSocket(WebSocketEndpoint):
     encoding = "json"
 
     async def on_connect(self, websocket: WebSocket) -> None:
-        logger.debug(f'Connected websocket {websocket.client}')
-        controller.new_connection(websocket)
-        await websocket.accept()
+        await controller.connect(websocket)
 
     async def on_receive(self, websocket: WebSocket, data: Any) -> None:
-        logger.debug(f'Received message from websocket {websocket.client}')
-        await controller.handle_message(websocket, data)
+        await controller.receive(websocket, data)
 
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
-        logger.debug(f'Disconnected websocket {websocket.client}')
-        controller.remove(websocket)
+        controller.disconnect(websocket)

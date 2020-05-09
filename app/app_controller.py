@@ -14,49 +14,81 @@ logger = logging.getLogger(__name__)
 
 
 class AppController:
-    """Entry point to application, manages I/O"""
+    """
+    The entry point to the application
+
+    ...
+
+    Attributes
+    ----------
+    connections : Dict[str, WebSocket]
+        a dictionary containing active connections
+    clients : Dict[str, Client]
+        a dictionary containing clients
+    games : Dict[int, Game]
+        a dictionary containing active games stored by pin
+
+    Methods
+    -------
+    connect(websocket)
+        accepts connection and updates connections dictionary
+
+    disconnect(websocket)
+        updates connections and clients dictionaries
+
+    receive(websocket, data)
+        handles message, updates state based on result, potentially sends messages back to sender or all clients in game
+    """
 
     def __init__(self):
-        # hold onto all connections
+        """Setup state for application"""
+        # store connections to access when sending message back to client
         self.connections: Dict[str, WebSocket] = {}
-        # use client to identify player and game they are apart of
+        # maps player identifier to websocket connections
         self.clients: Dict[str, Client] = {}
-        # hold onto game references
+        # map game pin to game object
         self.games: Dict[int, Game] = {}
 
-    def new_connection(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket):
+        """Handle websocket attempt to connect"""
+
         sender: str = websocket_identifier(websocket)
         self.connections[sender] = websocket
 
-    def remove(self, websocket: WebSocket):
-        # TODO ensure websocket id is unique, it might not be
-        identifier = websocket_identifier(websocket)
-        for client in self.clients.values():
+        logger.debug(f'Connected websocket {websocket.client}')
+        await websocket.accept()
 
-            if websocket_identifier in client.connections:
-                client.connections.remove(identifier)
-            if websocket_identifier in self.connections.keys():
-                del self.connections[identifier]
+    def disconnect(self, websocket: WebSocket):
+        """Handle websocket disconnect"""
 
-    async def handle_message(self, websocket: WebSocket, data: Dict):
+        logger.info(f'Received disconnect from websocket { websocket_identifier(websocket)}')
+        self._remove_connection(websocket)
+
+    async def receive(self, websocket: WebSocket, data: Dict):
+        """Handle receiving message from websocket"""
+
+        logger.debug(f'Received message from websocket {websocket.client}')
+
         sender: str = websocket_identifier(websocket)
 
         result: MessageResult = received_message(sender, data, self.games, self.clients)
-        self.update_state_for_result(result)
+        self._update_state_for_result(result)
 
         # side effect
-        await self.send_pending_messages(result)
+        await self._send_pending_messages(result)
 
         # perfect scenario for recursion, but stack runs out of space so a loop will have to do
         while result.game.is_present() and result.game.get().up_next().is_present() and result.game.get().up_next().get().player_type == COMPUTER_PLAYER:
             await asyncio.sleep(COMPUTER_WAIT_TIME)
             computer_generated_data: Dict = computer_controller.automate_turn(result.game.get())
             result: MessageResult = received_message(COMPUTER_PLAYER, computer_generated_data, self.games, self.clients)
-            self.update_state_for_result(result)
+            self._update_state_for_result(result)
             # side effect
-            await self.send_pending_messages(result)
+            await self._send_pending_messages(result)
 
-    def update_state_for_result(self, result: MessageResult):
+    def _update_state_for_result(self, result: MessageResult):
+        """Internal method for updating client and game dictionaries based on message result"""
+
         # update clients if necessary
         if result.new_client.is_present():
             client: Client = result.new_client.get()
@@ -68,37 +100,65 @@ class AppController:
             logger.info(f'Updating controller game for pin {updated_game.pin}')
             self.games[updated_game.pin] = updated_game
 
-    async def send_pending_messages(self, result: MessageResult):
+    async def _send_pending_messages(self, result: MessageResult):
+        """Internal method that transforms message result into websocket and message to send"""
+
         # send messages if necessary
         # TODO could cleanup a bit
         if result.pending_messages.is_present():
             for (identifier, message) in result.pending_messages.get():
-                # slight hack for now
+                # slight hack for now to avoid sending message to computer
                 if identifier == COMPUTER_PLAYER:
                     break
 
                 if identifier in self.connections:
-                    await send_message(self.connections[identifier], message)
+                    await self.send_message(self.connections[identifier], message)
+
                 elif identifier in self.clients:
                     client: Client = self.clients[identifier]
-                    for identifier in client.connections:
-                        if identifier in self.connections.keys():
-                            websocket: WebSocket = self.connections[identifier]
-                            await send_message(websocket, message)
+                    for client_identifier in client.connections:
+                        if client_identifier in self.connections.keys():
+                            websocket: WebSocket = self.connections[client_identifier]
+                            await self.send_message(websocket, message)
+
+    def _remove_connection(self, websocket: WebSocket):
+        """Internal method that removes connection by identifier"""
+
+        # TODO ensure websocket id is unique, it might not be
+        identifier: str = websocket_identifier(websocket)
+        for client in self.clients.values():
+            if identifier in client.connections:
+                logger.info(f'Removing connection {identifier} from client {client.identifier} connections')
+                client.connections.remove(identifier)
+
+            if identifier in self.connections.keys():
+                logger.info(f'Removing connection {identifier} from connections')
+                del self.connections[identifier]
+
+    async def send_message(self, websocket: WebSocket, message: Dict) -> bool:
+        """Internal method that attempts to send message to websocket
+
+        Important to note that a websocket disconnect is not reliably received when the event actually occurs.
+        Therefore, we must anticipate attempting to send a message to a disconnected websocket that is still believed
+        to be connected. The exception thrown is starlette.websockets.exceptions.ConnectionClosedOK which is not
+        publicly accessible. A broad except must be used to keep the application from crashing.
+        """
+
+        try:
+            if websocket.application_state == WebSocketState.CONNECTED:
+                await websocket.send_json(message)
+                return True
+            else:
+                logger.error(f'Websocket is disconnected. Not sending message.')
+                self._remove_connection(websocket)
+                return False
+        except:
+            logger.error('Attempted to send message to disconnected websocket.')
+            self._remove_connection(websocket)
+            return False
 
 
 def websocket_identifier(websocket: WebSocket) -> str:
+    """Method used to build websocket identifier from WebSocket object"""
+
     return f'{websocket.client.host}:{websocket.client.port}'
-
-
-async def send_message(websocket: WebSocket, message: Dict):
-    try:
-        if websocket.application_state == WebSocketState.CONNECTED:
-            await websocket.send_json(message)
-        else:
-            logger.error(f'Websocket is disconnected. Not sending message')
-    except:
-        # TODO figure out concurrency issue with not receiving disconnect until event loop is idle again
-        #  to avoid broad exception clause, figure out a specific exception to catch.
-        #  The crash is due to starlette.websockets.exceptions.ConnectionClosedOK
-        logger.error('Attempted to send message to disconnected websocket.')
