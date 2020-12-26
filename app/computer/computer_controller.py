@@ -2,8 +2,8 @@ import logging
 from typing import Dict
 
 from app.computer import simple_computer as simple
-from app.gameplay import game_data_methods
 from app.data.game import Game, Player
+from app.gameplay import game_data_methods
 from app.util import Optional
 
 logger = logging.getLogger(__name__)

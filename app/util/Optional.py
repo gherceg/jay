@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
 # Specifies that T can be anything
 T = TypeVar("T")

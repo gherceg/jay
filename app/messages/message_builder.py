@@ -1,9 +1,9 @@
-from typing import Dict
 import logging
+from typing import Dict
 
 from app.constants import *
 from app.data.game import Game, Player
-from app.data.turn import Question, Declaration
+from app.data.turn import Declaration, Question
 from app.util import Optional
 
 logger = logging.getLogger(__name__)

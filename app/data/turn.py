@@ -1,8 +1,8 @@
 from typing import List, Tuple
 
+from app.constants import *
 from app.data.game_enums import CardSet
 from app.util import util_methods
-from app.constants import *
 
 
 class Declaration:

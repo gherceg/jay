@@ -1,13 +1,14 @@
 import logging
 from typing import Dict, List, Tuple
 
-from app.gameplay import game_builder
-from app.messages import message_validation, message_builder
-from app.data.network import Client
+from app.constants import *
 from app.data.app_state import MessageResult
 from app.data.game import Game
-from app.gameplay.game_controller import update_game_for_question, update_game_for_declaration
-from app.constants import *
+from app.data.network import Client
+from app.gameplay import game_builder
+from app.gameplay.game_controller import (update_game_for_declaration,
+                                          update_game_for_question)
+from app.messages import message_builder, message_validation
 from app.util import Optional, util_methods
 
 logger = logging.getLogger(__name__)

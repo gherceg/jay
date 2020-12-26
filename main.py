@@ -1,10 +1,11 @@
+import logging
+from typing import Any
+
 from fastapi import FastAPI
-from starlette.websockets import WebSocket
 from starlette.endpoints import WebSocketEndpoint
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
-import logging
-from typing import Any
+from starlette.websockets import WebSocket
 
 from app.app_controller import AppController
 

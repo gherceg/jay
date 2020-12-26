@@ -1,10 +1,11 @@
-from pandas import Series, DataFrame
 import logging
 
-from app.gameplay import game_state_methods
-from app.util import data_frame_methods, util_methods
+from pandas import DataFrame, Series
+
 from app.data.game_enums import CardSet, CardStatus
 from app.data.turn import Question
+from app.gameplay import game_state_methods
+from app.util import data_frame_methods, util_methods
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)

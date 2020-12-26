@@ -1,7 +1,7 @@
-from app.gameplay import game_builder
-from app.data.game import Team
-from app.constants import *
 import app.gameplay.game_state_methods as game_state
+from app.constants import *
+from app.data.game import Team
+from app.gameplay import game_builder
 
 
 def test_network_player_setup():

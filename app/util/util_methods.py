@@ -1,9 +1,9 @@
 import random
 from typing import List, Set
 
+from app.constants import *
 from app.data.game_enums import CardSet
 from app.util import Optional
-from app.constants import *
 
 
 def client_identifier(player_id: str, game_id: str) -> str:

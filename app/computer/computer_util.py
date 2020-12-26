@@ -1,10 +1,11 @@
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
 from pandas import DataFrame
 
+from app.constants import *
 from app.data.game import Game, Player
 from app.data.game_enums import CardSet, CardStatus
 from app.util import util_methods
-from app.constants import *
 
 
 def get_best_declaration_score(player: Player) -> Tuple[CardSet, int]:

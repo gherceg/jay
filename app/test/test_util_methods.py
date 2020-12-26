@@ -1,5 +1,5 @@
-from app.util import util_methods
 from app.data.game_enums import CardSet
+from app.util import util_methods
 
 
 # Tests for set_for_card(card) util method

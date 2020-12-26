@@ -1,11 +1,12 @@
 import logging
-from pandas import DataFrame
-from typing import List, Dict
+from typing import Dict, List
 
-from app.data.turn import Question, Declaration
-from app.data.game_enums import CardStatus, CardSet
-from app.util import util_methods, data_frame_methods, Optional
+from pandas import DataFrame
+
 from app.constants import *
+from app.data.game_enums import CardSet, CardStatus
+from app.data.turn import Declaration, Question
+from app.util import Optional, data_frame_methods, util_methods
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,12 @@
-from typing import Dict, Set, List
-from pandas import DataFrame
 import logging
+from typing import Dict, List, Set
+
+from pandas import DataFrame
 
 from app.constants import *
-from app.util import Optional
 # ideally would not need this and just set cards on the player
 from app.gameplay.game_state_methods import get_cards_for_player
+from app.util import Optional
 
 logger = logging.getLogger(__name__)
 

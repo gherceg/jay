@@ -1,10 +1,10 @@
-from fastapi.testclient import TestClient
 from typing import Dict
 
-from main import app
-from app.test.test_classes import TestVariables
+from fastapi.testclient import TestClient
 
 from app.constants import *
+from app.test.test_classes import TestVariables
+from main import app
 
 client = TestClient(app)
 client_two = TestClient(app)

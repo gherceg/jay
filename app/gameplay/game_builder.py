@@ -1,13 +1,14 @@
 import copy
-import random
 import logging
-from pandas import DataFrame
+import random
 from typing import List
 
-from app.data.game import Player, Team, Game
-from app.util import util_methods, Optional
+from pandas import DataFrame
+
 from app.constants import *
+from app.data.game import Game, Player, Team
 from app.gameplay import game_state_methods
+from app.util import Optional, util_methods
 
 logger = logging.getLogger(__name__)
 

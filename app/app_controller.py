@@ -1,14 +1,15 @@
-import logging
-from starlette.websockets import WebSocket, WebSocketState
-from typing import Dict
 import asyncio
+import logging
+from typing import Dict
 
-from app.messages.message_handler import received_message
-from app.data.network import Client
-from app.data.app_state import MessageResult
-from app.data.game import Game
+from starlette.websockets import WebSocket, WebSocketState
+
 from app.computer import computer_controller
 from app.constants import *
+from app.data.app_state import MessageResult
+from app.data.game import Game
+from app.data.network import Client
+from app.messages.message_handler import received_message
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
-from pandas import DataFrame
 from typing import List
+
+from pandas import DataFrame
 
 
 def create_state_with_value(rows: List[str], columns: List[str], value: object) -> DataFrame:
