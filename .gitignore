@@ -1,7 +1,8 @@
+#.gitignore#
 /jay-env/
 .vscode/
 *.pyc
 *.pyo
 .DS_Store
 .idea/*
-#.gitignore#
+.python_version
