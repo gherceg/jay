@@ -1,12 +1,11 @@
 import logging
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 
 from pandas import DataFrame
 
 from app.constants import *
 # ideally would not need this and just set cards on the player
 from app.gameplay.game_state_methods import get_cards_for_player
-from app.util import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -59,13 +58,13 @@ class Game:
         self.ledger = ledger
         self.state = state
         self.options = options
-        self.player_up_next: Optional[str] = up_next
+        self.player_up_next = up_next
 
     def up_next(self) -> Optional[Player]:
-        if self.player_up_next.is_present() and self.player_up_next.get() in self.players.keys():
-            return Optional(self.players[self.player_up_next.get()])
+        if self.player_up_next and self.player_up_next in self.players.keys():
+            return self.players[self.player_up_next]
         else:
-            return Optional.empty()
+            return None
 
     @property
     def virtual_deck(self) -> bool:

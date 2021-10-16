@@ -1,12 +1,12 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pandas import DataFrame
 
 from app.constants import *
 from app.data.game_enums import CardSet, CardStatus
 from app.data.turn import Declaration, Question
-from app.util import Optional, data_frame_methods, util_methods
+from app.util import data_frame_methods, util_methods
 
 logger = logging.getLogger(__name__)
 
@@ -137,9 +137,9 @@ def able_to_declare(state: DataFrame, team: List[str], card_set: CardSet) -> Opt
         team_has_card = team_rows[team_rows == CardStatus.DOES_HAVE]
         assert (len(team_has_card) <= 1)
         if len(team_has_card) == 0:
-            return Optional.empty()
+            return None
         else:
             pair = {CARD: card, PLAYER: team_has_card.keys()[0]}
             declared_map.append(pair)
 
-    return Optional(declared_map)
+    return declared_map

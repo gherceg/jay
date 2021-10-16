@@ -4,7 +4,6 @@ from typing import Dict
 from app.constants import *
 from app.data.game import Game, Player
 from app.data.turn import Declaration, Question
-from app.util import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ def joined_game(game: Game) -> Dict:
 
 
 def game_update(game: Game, player: Player) -> Dict:
-    opt_turn = Optional(game.ledger[-1]) if len(game.ledger) > 0 else Optional.empty()
+    turn = game.ledger[-1] if len(game.ledger) > 0 else None
     contents = {
         MESSAGE_TYPE: GAME_UPDATE,
         DATA: {
@@ -48,14 +47,13 @@ def game_update(game: Game, player: Player) -> Dict:
                 NAME: player.name,
                 CARDS: player.get_cards()
             },
-            NEXT_TURN: game.player_up_next.get() if game.player_up_next.is_present() else '',
+            NEXT_TURN: game.player_up_next if game.player_up_next else '',
             TEAMS_KEY: formatted_teams(game)
         }
     }
 
-    if opt_turn.is_present():
+    if turn:
         # could be instance of Question or Declaration
-        turn = opt_turn.get()
         turn_type = TURN if isinstance(turn, Question) else DECLARATION
         contents[DATA][LAST_TURN] = {
             TYPE: turn_type,

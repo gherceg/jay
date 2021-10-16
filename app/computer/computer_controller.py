@@ -4,17 +4,15 @@ from typing import Dict
 from app.computer import simple_computer as simple
 from app.data.game import Game, Player
 from app.gameplay import game_data_methods
-from app.util import Optional
 
 logger = logging.getLogger(__name__)
 
 
 def automate_turn(game: Game, algorithm: str = 'simple') -> Dict:
-    opt_player: Optional[Player] = game.up_next()
-    if opt_player.is_empty():
-        logger.error(f'No player is up next. {game.player_up_next.get()}')
+    player = game.up_next()
+    if player is None:
+        logger.error(f'No player is up next. {game.player_up_next}')
         return {}
-    player: Player = opt_player.get()
 
     turn: Dict = {}
     if algorithm == 'simple':

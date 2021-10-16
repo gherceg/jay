@@ -25,9 +25,9 @@ def generate_turn(player: Player, eligible_player_names: List[str], game: Game) 
     # first check if computer knows where all of the cards of a certain set are
     team_players = (player.name,) + player.teammates
     for card_set in CardSet:
-        opt_declared_map = game_state_methods.able_to_declare(player.state, team_players, card_set)
-        if opt_declared_map.is_present():
-            return computer_util.declaration_to_dict(game, player.name, card_set, opt_declared_map.get())
+        declared_map = game_state_methods.able_to_declare(player.state, team_players, card_set)
+        if declared_map:
+            return computer_util.declaration_to_dict(game, player.name, card_set, declared_map)
 
     # could not declare, so ask a question
     eligible_cards = util_methods.eligible_cards(player.get_cards())
