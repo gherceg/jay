@@ -1,6 +1,6 @@
 import logging
 import random
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pandas import DataFrame
 
@@ -9,7 +9,6 @@ from app.data.game import Game, Player
 from app.data.game_enums import CardSet
 from app.data.turn import Declaration, Question
 from app.gameplay import game_data_methods, game_state_methods
-from app.util import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ def update_game_for_question(game: Game, questioner: str, respondent: str, card:
     outcome: bool = game_data_methods.does_player_have_card(game, respondent, card)
     question: Question = Question(questioner, respondent, card, outcome)
     logger.info(question)
-    game.player_up_next = Optional(questioner) if outcome else Optional(respondent)
+    game.player_up_next = questioner if outcome else respondent
     game.ledger.append(question)
     game_state: DataFrame = game_state_methods.update_state_with_question(game.state, question)
     players: Dict[str, Player] = update_players_for_question(game, question)
@@ -41,9 +40,9 @@ def update_game_for_declaration(game: Game, player_name: str, card_set: CardSet,
     game_state: DataFrame = game_state_methods.update_state_with_declaration(game.state, declaration)
     players: Dict[str, Player] = update_players_for_declaration(game, declaration)
 
-    up_next: Optional[str] = determine_player_up_next_after_declaration(game, player_who_declared, outcome)
-    if up_next.is_present():
-        logger.info(f'{up_next.get()} is up next')
+    up_next = determine_player_up_next_after_declaration(game, player_who_declared, outcome)
+    if up_next:
+        logger.info(f'{up_next} is up next')
 
     return Game(game.pin, players, game.teams, game_state, game.ledger, up_next, game.options)
 
@@ -86,27 +85,27 @@ def determine_player_up_next_after_declaration(game: Game, player: Player, outco
         f'Determining player up next after {"successful" if outcome else "failed"} declaration\nPlayer in play: {player.in_play}\nEligible teammates: {list(eligible_teammate_names)}\nEligible opponents: {list(eligible_opponent_names)}')
     if outcome:
         if player.in_play:
-            return Optional(player.name)
+            return player.name
         elif len(eligible_teammates) > 0:
             teammate = random.choice(eligible_teammates)
-            return Optional(teammate.name)
+            return teammate.name
         elif len(eligible_opponents) > 0:
             opponent = random.choice(eligible_opponents)
-            return Optional(opponent.name)
+            return opponent.name
         elif game_data_methods.is_game_over(game):
-            return Optional.empty()
+            return None
         else:
             raise Exception('Everyone is out but the game is not over.')
     else:
         if len(eligible_opponents) > 0:
             opponent = random.choice(eligible_opponents)
-            return Optional(opponent.name)
+            return opponent.name
         elif player.in_play:
-            return Optional(player.name)
+            return player.name
         elif len(eligible_teammates) > 0:
             teammate = random.choice(eligible_teammates)
-            return Optional(teammate.name)
+            return teammate.name
         elif game_data_methods.is_game_over(game):
-            return Optional.empty()
+            return None
         else:
             raise Exception('Everyone is out but the game is not over.')

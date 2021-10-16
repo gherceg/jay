@@ -79,9 +79,9 @@ class AppController:
         await self._send_pending_messages(result)
 
         # perfect scenario for recursion, but stack runs out of space so a loop will have to do
-        while result.game.is_present() and result.game.get().up_next().is_present() and result.game.get().up_next().get().player_type == COMPUTER_PLAYER:
+        while result.game and result.game.up_next() and result.game.up_next().player_type == COMPUTER_PLAYER:
             await asyncio.sleep(COMPUTER_WAIT_TIME)
-            computer_generated_data: Dict = computer_controller.automate_turn(result.game.get())
+            computer_generated_data: Dict = computer_controller.automate_turn(result.game)
             result: MessageResult = received_message(COMPUTER_PLAYER, computer_generated_data, self.games, self.clients)
             self._update_state_for_result(result)
             # side effect
@@ -91,13 +91,13 @@ class AppController:
         """Internal method for updating client and game dictionaries based on message result"""
 
         # update clients if necessary
-        if result.new_client.is_present():
-            client: Client = result.new_client.get()
+        if result.new_client:
+            client: Client = result.new_client
             self.clients[client.identifier] = client
 
         # update game if necessary
-        if result.game.is_present():
-            updated_game: Game = result.game.get()
+        if result.game:
+            updated_game: Game = result.game
             logger.info(f'Updating controller game for pin {updated_game.pin}')
             self.games[updated_game.pin] = updated_game
 
@@ -106,8 +106,8 @@ class AppController:
 
         # send messages if necessary
         # TODO could cleanup a bit
-        if result.pending_messages.is_present():
-            for (identifier, message) in result.pending_messages.get():
+        if result.pending_messages:
+            for (identifier, message) in result.pending_messages:
                 # slight hack for now to avoid sending message to computer
                 if identifier == COMPUTER_PLAYER:
                     break

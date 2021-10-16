@@ -8,7 +8,7 @@ from pandas import DataFrame
 from app.constants import *
 from app.data.game import Game, Player, Team
 from app.gameplay import game_state_methods
-from app.util import Optional, util_methods
+from app.util import util_methods
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def create_game(settings: dict) -> Game:
 
     player_name: str = get_first_turn(players)
     state = setup_default_master_state(list(players_dict.values()))
-    game = Game(pin, players_dict, teams_dict, state, [], Optional(player_name), options)
+    game = Game(pin, players_dict, teams_dict, state, [], player_name, options)
 
     return game
 

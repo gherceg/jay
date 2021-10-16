@@ -49,7 +49,7 @@ def test_declaration_check():
     state = game_state_methods.update_state_upon_receiving_cards(state, 'c', cards_for_c)
 
     # check declaration
-    opt_declared_map = game_state_methods.able_to_declare(state, players, CardSet.LOW_SPADES)
+    declared_map = game_state_methods.able_to_declare(state, players, CardSet.LOW_SPADES)
 
-    assert (opt_declared_map.is_present())
-    assert expected_declared_map == opt_declared_map.get()
+    assert (declared_map is not None)
+    assert expected_declared_map == declared_map

@@ -1,9 +1,8 @@
 import random
-from typing import List, Set
+from typing import List, Optional, Set
 
 from app.constants import *
 from app.data.game_enums import CardSet
-from app.util import Optional
 
 
 def client_identifier(player_id: str, game_id: str) -> str:
@@ -57,25 +56,25 @@ def distribute_cards(player_count: int) -> tuple:
     return tuple(hands)
 
 
-def card_set_for_key(key: str) -> Optional:
+def card_set_for_key(key: str) -> Optional[str]:
     if key == LOW_CLUBS_KEY:
-        return Optional(CardSet.LOW_CLUBS)
+        return CardSet.LOW_CLUBS
     elif key == HIGH_CLUBS_KEY:
-        return Optional(CardSet.HIGH_CLUBS)
+        return CardSet.HIGH_CLUBS
     elif key == LOW_DIAMONDS_KEY:
-        return Optional(CardSet.LOW_DIAMONDS)
+        return CardSet.LOW_DIAMONDS
     elif key == HIGH_DIAMONDS_KEY:
-        return Optional(CardSet.HIGH_DIAMONDS)
+        return CardSet.HIGH_DIAMONDS
     elif key == LOW_SPADES_KEY:
-        return Optional(CardSet.LOW_SPADES)
+        return CardSet.LOW_SPADES
     elif key == HIGH_SPADES_KEY:
-        return Optional(CardSet.HIGH_SPADES)
+        return CardSet.HIGH_SPADES
     elif key == LOW_HEARTS_KEY:
-        return Optional(CardSet.LOW_HEARTS)
+        return CardSet.LOW_HEARTS
     elif key == HIGH_HEARTS_KEY:
-        return Optional(CardSet.HIGH_HEARTS)
+        return CardSet.HIGH_HEARTS
     else:
-        return Optional.empty()
+        return None
 
 
 def key_for_card_set(card_set: CardSet) -> str:
