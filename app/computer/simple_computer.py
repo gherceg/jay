@@ -40,7 +40,7 @@ def generate_turn(player: Player, eligible_player_names: List[str], game: Game) 
 
 
 def attempt_to_declare(player: Player, game: Game) -> Dict:
-    team = [player.name] + player.teammates
+    team = [player.name] + list(player.teammates)
     set_to_declare, score = computer_util.get_best_declaration_score(player)
     declared_map: List[Dict[str, str]] = declare(player, team, set_to_declare)
     return computer_util.declaration_to_dict(game, player.name, set_to_declare, declared_map)
